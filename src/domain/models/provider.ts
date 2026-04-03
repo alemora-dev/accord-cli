@@ -9,7 +9,7 @@ export interface ProviderDetectionResult {
 export interface ProviderExecutionContext {
   topic: string;
   workspaceDir: string;
-  peerOutputs?: string[];
+  peerFindings?: ProviderFinding[];
 }
 
 export interface ProviderExecutionResult extends ProviderFinding {}

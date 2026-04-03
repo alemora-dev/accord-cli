@@ -34,13 +34,13 @@ export class DebateOrchestrator {
       const reviewRound = this.startRound("r2", "cross-review");
 
       for (const [index, provider] of providers.entries()) {
-        const peerOutputs = independentArtifacts
+        const peerFindings = independentArtifacts
           .filter((_, findingIndex) => findingIndex !== index)
-          .map((artifact) => artifact.rawOutput);
+          .map((artifact) => artifact.normalized);
         const rawOutput = await provider.execute({
           topic,
           workspaceDir,
-          peerOutputs
+          peerFindings
         });
         reviewArtifacts.push({
           providerId: provider.id,

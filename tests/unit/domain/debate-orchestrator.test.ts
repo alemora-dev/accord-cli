@@ -8,6 +8,7 @@ class RichProvider extends AbstractProvider {
   readonly displayName: string;
   readonly command: string;
   normalizeCalls = 0;
+  readonly executionContexts: ProviderExecutionContext[] = [];
 
   constructor(
     readonly id: string,
@@ -20,7 +21,7 @@ class RichProvider extends AbstractProvider {
   }
 
   buildPrompt(context: ProviderExecutionContext): string {
-    return context.peerOutputs?.length ? "cross-review" : "independent";
+    return (context as any).peerFindings?.length ? "cross-review" : "independent";
   }
 
   normalize(rawOutput: string) {
@@ -37,7 +38,13 @@ class RichProvider extends AbstractProvider {
   }
 
   async execute(context: ProviderExecutionContext): Promise<string> {
-    return JSON.stringify(context.peerOutputs?.length ? this.reviewPayload : this.independentPayload);
+    this.executionContexts.push({
+      topic: context.topic,
+      workspaceDir: context.workspaceDir,
+      peerFindings: context.peerFindings ? context.peerFindings.map((finding) => ({ ...finding })) : undefined
+    });
+
+    return JSON.stringify((context as any).peerFindings?.length ? this.reviewPayload : this.independentPayload);
   }
 }
 
@@ -70,15 +77,15 @@ describe("DebateOrchestrator", () => {
       "Different review claim"
     ]);
     expect(codex.executionContexts).toHaveLength(2);
-    expect(codex.executionContexts[1]?.peerOutputs).toEqual([
-      JSON.stringify({
-        answer: "claude answer",
+    expect((codex.executionContexts[1] as any)?.peerFindings).toEqual([
+      {
+        providerId: "claude",
         claims: [{ id: "claude-0", text: "Claim B", support: "evidence-backed" }]
-      }),
-      JSON.stringify({
-        answer: "gemini answer",
+      },
+      {
+        providerId: "gemini",
         claims: [{ id: "gemini-0", text: "Claim C", support: "evidence-backed" }]
-      })
+      }
     ]);
   });
 
@@ -171,6 +178,51 @@ describe("DebateOrchestrator", () => {
     expect(result.findings.map((finding) => finding.claims[0]?.text)).toEqual(["Initial A"]);
     expect(result.consensus.contestedClaims).toEqual([
       { text: "Initial A", providerIds: ["codex"] }
+    ]);
+  });
+
+  it("forwards structured peer findings into cross-review prompts", async () => {
+    const codex = new RichProvider(
+      "codex",
+      {
+        answer: "codex answer",
+        claims: [{ id: "codex-0", text: "Initial A", support: "evidence-backed" }],
+        evidence: [{ id: "codex-e0", summary: "codex independent evidence" }],
+        confidence: 0.41
+      },
+      {
+        answer: "codex review answer",
+        claims: [{ id: "codex-0", text: "Reviewed A", support: "evidence-backed" }],
+        evidence: [{ id: "codex-r0", summary: "codex review evidence" }],
+        confidence: 0.91
+      }
+    );
+    const gemini = new RichProvider(
+      "gemini",
+      {
+        answer: "gemini answer",
+        claims: [{ id: "gemini-0", text: "Initial B", support: "evidence-backed" }],
+        evidence: [{ id: "gemini-e0", summary: "gemini independent evidence" }],
+        confidence: 0.52
+      },
+      {
+        answer: "gemini review answer",
+        claims: [{ id: "gemini-0", text: "Reviewed A", support: "evidence-backed" }],
+        evidence: [{ id: "gemini-r0", summary: "gemini review evidence" }],
+        confidence: 0.88
+      }
+    );
+
+    await new DebateOrchestrator().run("Topic", [codex, gemini]);
+
+    const reviewContext = codex.executionContexts[1] as any;
+    expect(reviewContext.peerFindings).toEqual([
+      {
+        providerId: "gemini",
+        claims: [{ id: "gemini-0", text: "Initial B", support: "evidence-backed" }],
+        evidence: [{ id: "gemini-e0", summary: "gemini independent evidence" }],
+        confidence: 0.52
+      }
     ]);
   });
 });

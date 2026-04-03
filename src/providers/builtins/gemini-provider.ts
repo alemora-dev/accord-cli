@@ -22,8 +22,8 @@ export class GeminiProvider extends AbstractProvider {
   }
 
   buildPrompt(context: ProviderExecutionContext): string {
-    return context.peerOutputs?.length
-      ? buildCrossReviewPrompt(context.topic, context.peerOutputs)
+    return context.peerFindings?.length
+      ? buildCrossReviewPrompt(context.topic, context.peerFindings)
       : buildIndependentRoundPrompt(context.topic);
   }
 

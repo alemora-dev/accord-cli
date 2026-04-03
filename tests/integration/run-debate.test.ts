@@ -65,15 +65,15 @@ describe("runDebate", () => {
         ]
       })
     ]);
-    expect(claude.executionContexts[1]?.peerOutputs).toEqual([
-      JSON.stringify({
-        answer: "codex answer",
+    expect((claude.executionContexts[1] as any)?.peerFindings).toEqual([
+      {
+        providerId: "codex",
         claims: [{ id: "codex-0", text: "Claim A", support: "evidence-backed" }]
-      }),
-      JSON.stringify({
-        answer: "gemini answer",
+      },
+      {
+        providerId: "gemini",
         claims: [{ id: "gemini-0", text: "Claim C", support: "evidence-backed" }]
-      })
+      }
     ]);
   });
 
@@ -93,7 +93,7 @@ describe("runDebate", () => {
     ]);
     expect(result.findings.map((finding) => finding.claims[0]?.text)).toEqual(["Claim A"]);
     expect(codex.executionContexts).toHaveLength(1);
-    expect(codex.executionContexts[0]?.peerOutputs).toBeUndefined();
+    expect(codex.executionContexts[0]?.peerFindings).toBeUndefined();
   });
 });
 

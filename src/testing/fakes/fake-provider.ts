@@ -21,7 +21,7 @@ export class FakeProvider extends AbstractProvider {
   }
 
   buildPrompt(context: ProviderExecutionContext): string {
-    return context.peerOutputs?.length ? "cross-review" : "independent";
+    return context.peerFindings?.length ? "cross-review" : "independent";
   }
 
   normalize(rawOutput: string): ProviderExecutionResult {
@@ -32,10 +32,10 @@ export class FakeProvider extends AbstractProvider {
     this.executionContexts.push({
       topic: context.topic,
       workspaceDir: context.workspaceDir,
-      peerOutputs: context.peerOutputs ? [...context.peerOutputs] : undefined
+      peerFindings: context.peerFindings ? context.peerFindings.map((finding) => ({ ...finding })) : undefined
     });
 
-    const claims = context.peerOutputs?.length ? this.reviewClaims : this.independentClaims;
+    const claims = context.peerFindings?.length ? this.reviewClaims : this.independentClaims;
 
     return JSON.stringify({
       answer: `${this.id} answer`,

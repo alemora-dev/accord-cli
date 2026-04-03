@@ -46,22 +46,35 @@ describe("GeminiProvider", () => {
     const context = {
       topic: "Should governments mandate model audits?",
       workspaceDir: "/tmp/accord",
-      peerOutputs: ["peer output A", "peer output B"]
+      peerFindings: [
+        {
+          providerId: "peer-a",
+          claims: [{ id: "peer-a-0", text: "Claim A", support: "evidence-backed" }]
+        },
+        {
+          providerId: "peer-b",
+          claims: [{ id: "peer-b-0", text: "Claim B", support: "evidence-backed" }]
+        }
+      ]
     };
 
-    await provider.execute(context);
+    await provider.execute(context as never);
 
     expect(calls).toEqual([
       {
         command: "gemini",
         args: ["-p"],
-        input: provider.buildPrompt(context),
+        input: provider.buildPrompt(context as never),
         cwd: "/tmp/accord"
       }
     ]);
-    expect(calls[0]?.input).toContain("reviewing peer outputs");
-    expect(calls[0]?.input).toContain("peer output A");
-    expect(calls[0]?.input).toContain("peer output B");
+    expect(calls[0]?.input).toContain("reviewing peer findings");
+    expect(calls[0]?.input).toContain("peer-a");
+    expect(calls[0]?.input).toContain("Claim A");
+    expect(calls[0]?.input).toContain("Return JSON");
+    expect(calls[0]?.input).toContain("claims");
+    expect(calls[0]?.input).toContain("evidence");
+    expect(calls[0]?.input).toContain("confidence");
   });
 
   it("normalizes raw output without additional parsing", () => {
@@ -78,5 +91,16 @@ describe("GeminiProvider", () => {
       evidence: [{ id: "e-1", summary: "Sample evidence" }],
       confidence: 0.75
     });
+  });
+
+  it("rejects malformed raw output with an actionable error", () => {
+    const provider = new GeminiProvider();
+    const rawOutput = JSON.stringify({
+      claims: [{ id: "c-1", text: "Sample claim" }]
+    });
+
+    expect(() => provider.normalize(rawOutput)).toThrow(
+      "Gemini CLI returned invalid finding payload"
+    );
   });
 });

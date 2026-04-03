@@ -38,7 +38,7 @@ export const ProviderFindingPayloadSchema = z.object({
       support: z.enum(["evidence-backed", "inference", "speculation", "unsupported"]),
       citations: z.array(z.string()).optional()
     })
-  ).default([]),
+  ).min(1),
   evidence: z
     .array(
       z.object({
