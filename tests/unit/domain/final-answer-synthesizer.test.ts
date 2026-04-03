@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { FinalAnswerSynthesizer } from "../../../src/domain/services/final-answer-synthesizer.js";
 
 describe("FinalAnswerSynthesizer", () => {
-  it("builds a deterministic final answer from consensus data", () => {
+  it("builds the same final answer for equivalent inputs in different orders", () => {
     const synthesizer = new FinalAnswerSynthesizer();
 
-    const result = synthesizer.build({
+    const resultA = synthesizer.build({
       topic: "What color is the sky?",
       consensusClaims: [
         {
@@ -21,11 +21,28 @@ describe("FinalAnswerSynthesizer", () => {
       ]
     });
 
-    expect(result).toEqual({
+    const resultB = synthesizer.build({
+      topic: "What color is the sky?",
+      consensusClaims: [
+        {
+          text: "The sky is blue.",
+          supportingProviderIds: ["gemini", "codex"]
+        }
+      ],
+      contestedClaims: [
+        {
+          text: "The sky is gray.",
+          providerIds: ["claude"]
+        }
+      ]
+    });
+
+    expect(resultA).toEqual({
       answer: "The sky is blue.",
       whyItWon: "Supported by codex and gemini after review.",
       disagreements: ["The sky is gray. (claude)"],
       openQuestions: []
     });
+    expect(resultB).toEqual(resultA);
   });
 });

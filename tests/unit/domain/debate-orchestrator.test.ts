@@ -68,7 +68,7 @@ describe("DebateOrchestrator", () => {
     expect(result.consensus.consensusClaims).toEqual([
       {
         text: "Shared claim",
-        supportingProviderIds: ["codex", "claude"]
+        supportingProviderIds: ["claude", "codex"]
       }
     ]);
     expect(result.findings.map((finding) => finding.claims[0]?.text)).toEqual([

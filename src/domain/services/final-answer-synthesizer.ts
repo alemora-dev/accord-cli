@@ -10,14 +10,31 @@ export class FinalAnswerSynthesizer {
     consensusClaims: ConsensusClaim[];
     contestedClaims: ContestedClaim[];
   }): FinalAnswerResult {
-    const winningClaim = input.consensusClaims[0];
+    const consensusClaims = [...input.consensusClaims].sort((left, right) => {
+      const supportDelta =
+        right.supportingProviderIds.length - left.supportingProviderIds.length;
+      if (supportDelta !== 0) {
+        return supportDelta;
+      }
+
+      return left.text.localeCompare(right.text);
+    });
+    const contestedClaims = [...input.contestedClaims].sort((left, right) =>
+      left.text.localeCompare(right.text)
+    );
+    const winningClaim = consensusClaims[0];
+    const supportingProviderIds = winningClaim?.supportingProviderIds
+      ? [...winningClaim.supportingProviderIds].sort((left, right) =>
+          left.localeCompare(right)
+        )
+      : [];
 
     return {
       answer: winningClaim?.text ?? "No clear consensus was reached.",
       whyItWon: winningClaim
-        ? `Supported by ${winningClaim.supportingProviderIds.join(" and ")} after review.`
+        ? `Supported by ${supportingProviderIds.join(" and ")} after review.`
         : "No claim had enough support after review.",
-      disagreements: input.contestedClaims.map(
+      disagreements: contestedClaims.map(
         (claim) => `${claim.text} (${claim.providerIds.join(", ")})`
       ),
       openQuestions: []

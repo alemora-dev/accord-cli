@@ -1,6 +1,6 @@
-import type { ConsensusResult } from "../../domain/models/consensus.js";
+import type { BaseConsensusResult } from "../../domain/models/consensus.js";
 
-export function exportMarkdownReport(result: ConsensusResult): string {
+export function exportMarkdownReport(result: BaseConsensusResult): string {
   return [
     `# ${result.topic}`,
     "",

@@ -17,17 +17,20 @@ export interface FinalAnswerResult {
   openQuestions: string[];
 }
 
-export interface ConsensusResult {
+export interface BaseConsensusResult {
   topic: string;
   consensusClaims: ConsensusClaim[];
   contestedClaims: ContestedClaim[];
-  finalAnswer?: FinalAnswerResult;
+}
+
+export interface ConsensusResult extends BaseConsensusResult {
+  finalAnswer: FinalAnswerResult;
 }
 
 export function buildConsensusResult(input: {
   topic: string;
   findings: ProviderFinding[];
-}): ConsensusResult {
+}): BaseConsensusResult {
   const groups = new Map<string, { text: string; providerIds: Set<string> }>();
 
   for (const finding of input.findings) {
@@ -46,13 +49,27 @@ export function buildConsensusResult(input: {
   const contestedClaims: ContestedClaim[] = [];
 
   for (const { text, providerIds } of groups.values()) {
-    const normalizedProviders = [...providerIds];
+    const normalizedProviders = [...providerIds].sort((left, right) =>
+      left.localeCompare(right)
+    );
     if (normalizedProviders.length >= 2) {
       consensusClaims.push({ text, supportingProviderIds: normalizedProviders });
     } else {
       contestedClaims.push({ text, providerIds: normalizedProviders });
     }
   }
+
+  consensusClaims.sort((left, right) => {
+    const supportDelta =
+      right.supportingProviderIds.length - left.supportingProviderIds.length;
+    if (supportDelta !== 0) {
+      return supportDelta;
+    }
+
+    return left.text.localeCompare(right.text);
+  });
+
+  contestedClaims.sort((left, right) => left.text.localeCompare(right.text));
 
   return {
     topic: input.topic,
