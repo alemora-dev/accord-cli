@@ -12,4 +12,6 @@ export interface DebateRun {
   selectedProviderIds: string[];
   rounds: DebateRound[];
   findings: ProviderFinding[];
+  independentFindings: ProviderFinding[];
+  reviewFindings: ProviderFinding[];
 }

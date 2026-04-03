@@ -25,13 +25,23 @@ describe("runDebate", () => {
         supportingProviderIds: ["codex", "claude"]
       }
     ]);
+    expect(result.independentFindings.map((finding) => finding.claims[0]?.text)).toEqual([
+      "Claim A",
+      "Claim B",
+      "Claim C"
+    ]);
+    expect(result.reviewFindings.map((finding) => finding.claims[0]?.text)).toEqual([
+      "Shared claim",
+      "Shared claim",
+      "Different review claim"
+    ]);
     expect(claude.executionContexts[1]?.peerOutputs).toEqual([
       JSON.stringify({
-        providerId: "codex",
+        answer: "codex answer",
         claims: [{ id: "codex-0", text: "Claim A", support: "evidence-backed" }]
       }),
       JSON.stringify({
-        providerId: "gemini",
+        answer: "gemini answer",
         claims: [{ id: "gemini-0", text: "Claim C", support: "evidence-backed" }]
       })
     ]);

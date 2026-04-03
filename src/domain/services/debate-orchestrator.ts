@@ -1,6 +1,7 @@
 import type { DebateRun, DebateRound } from "../models/debate.js";
 import type { ConsensusResult } from "../models/consensus.js";
-import type { ProviderFinding } from "../value-objects/provider-output.js";
+import type { ProviderFinding, ProviderFindingPayload } from "../value-objects/provider-output.js";
+import type { ProviderArtifact } from "../value-objects/debate-artifacts.js";
 import type { AbstractProvider } from "../../providers/core/abstract-provider.js";
 import { ConsensusEngine } from "./consensus-engine.js";
 
@@ -15,45 +16,56 @@ export class DebateOrchestrator {
     const workspaceDir = process.cwd();
     const rounds: DebateRound[] = [];
     const independentRound = this.startRound("r1", "independent");
-    const independentFindings: ProviderFinding[] = [];
+    const independentArtifacts: ProviderArtifact[] = [];
 
     for (const provider of providers) {
       const rawOutput = await provider.execute({ topic, workspaceDir });
-      independentFindings.push(this.parseFinding(provider.id, rawOutput));
+      independentArtifacts.push({
+        providerId: provider.id,
+        rawOutput,
+        normalized: this.parseFinding(provider.id, rawOutput)
+      });
     }
     rounds.push(this.completeRound(independentRound));
 
     const reviewRound = this.startRound("r2", "cross-review");
-    const reviewedFindings: ProviderFinding[] = [];
+    const reviewArtifacts: ProviderArtifact[] = [];
 
     for (const [index, provider] of providers.entries()) {
-      const peerOutputs = independentFindings
+      const peerOutputs = independentArtifacts
         .filter((_, findingIndex) => findingIndex !== index)
-        .map((finding) => JSON.stringify(finding));
+        .map((artifact) => artifact.rawOutput);
       const rawOutput = await provider.execute({
         topic,
         workspaceDir,
         peerOutputs
       });
-      reviewedFindings.push(this.parseFinding(provider.id, rawOutput));
+      reviewArtifacts.push({
+        providerId: provider.id,
+        rawOutput,
+        normalized: this.parseFinding(provider.id, rawOutput)
+      });
     }
     rounds.push(this.completeRound(reviewRound));
 
     const consensusRound = this.startRound("r3", "consensus");
-    const consensus = this.consensusEngine.build(topic, reviewedFindings);
+    const reviewFindings = reviewArtifacts.map((artifact) => artifact.normalized);
+    const consensus = this.consensusEngine.build(topic, reviewFindings);
     rounds.push(this.completeRound(consensusRound));
 
     return {
       topic,
       selectedProviderIds: providers.map((provider) => provider.id),
       rounds,
-      findings: reviewedFindings,
+      findings: reviewFindings,
+      independentFindings: independentArtifacts.map((artifact) => artifact.normalized),
+      reviewFindings,
       consensus
     };
   }
 
   private parseFinding(providerId: string, rawOutput: string): ProviderFinding {
-    const parsed = JSON.parse(rawOutput) as { claims?: ProviderFinding["claims"] };
+    const parsed = JSON.parse(rawOutput) as ProviderFindingPayload;
 
     return {
       providerId,

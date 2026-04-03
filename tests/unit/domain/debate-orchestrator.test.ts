@@ -33,13 +33,29 @@ describe("DebateOrchestrator", () => {
     expect(codex.executionContexts).toHaveLength(2);
     expect(codex.executionContexts[1]?.peerOutputs).toEqual([
       JSON.stringify({
-        providerId: "claude",
+        answer: "claude answer",
         claims: [{ id: "claude-0", text: "Claim B", support: "evidence-backed" }]
       }),
       JSON.stringify({
-        providerId: "gemini",
+        answer: "gemini answer",
         claims: [{ id: "gemini-0", text: "Claim C", support: "evidence-backed" }]
       })
+    ]);
+  });
+
+  it("returns independent and review findings separately", async () => {
+    const codex = new FakeProvider("codex", ["Initial A"], ["Reviewed A"]);
+    const gemini = new FakeProvider("gemini", ["Initial B"], ["Reviewed A"]);
+
+    const result = await new DebateOrchestrator().run("Topic", [codex, gemini]);
+
+    expect(result.independentFindings.map((finding) => finding.claims[0]?.text)).toEqual([
+      "Initial A",
+      "Initial B"
+    ]);
+    expect(result.reviewFindings.map((finding) => finding.claims[0]?.text)).toEqual([
+      "Reviewed A",
+      "Reviewed A"
     ]);
   });
 });

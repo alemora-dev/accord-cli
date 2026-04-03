@@ -21,3 +21,9 @@ export interface ProviderFinding {
   evidence?: EvidenceItem[];
   confidence?: number;
 }
+
+export interface ProviderFindingPayload {
+  claims?: Claim[];
+  evidence?: EvidenceItem[];
+  confidence?: number;
+}
