@@ -2,6 +2,40 @@ import { describe, expect, it } from "vitest";
 import { ConsensusEngine } from "../../../src/domain/services/consensus-engine.js";
 
 describe("ConsensusEngine", () => {
+  it("orders equivalent non-ASCII claims deterministically", () => {
+    const result = new ConsensusEngine().build("Topic", [
+      {
+        providerId: "codex",
+        claims: [{ id: "c1", text: "  ångström  ", support: "evidence-backed" }]
+      },
+      {
+        providerId: "claude",
+        claims: [{ id: "c2", text: "Ångström", support: "evidence-backed" }]
+      },
+      {
+        providerId: "gemini",
+        claims: [{ id: "c3", text: "Zulu", support: "evidence-backed" }]
+      },
+      {
+        providerId: "zed",
+        claims: [{ id: "c4", text: "Zulu", support: "evidence-backed" }]
+      }
+    ]);
+
+    expect(result.consensusClaims).toEqual([
+      {
+        text: "Zulu",
+        strongestSupport: "evidence-backed",
+        supportingProviderIds: ["gemini", "zed"]
+      },
+      {
+        text: "Ångström",
+        strongestSupport: "evidence-backed",
+        supportingProviderIds: ["claude", "codex"]
+      }
+    ]);
+  });
+
   it("chooses a canonical display text for equivalent casing and whitespace", () => {
     const result = new ConsensusEngine().build("Topic", [
       {

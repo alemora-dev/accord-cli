@@ -40,30 +40,18 @@ export function getSupportScore(level: SupportLevel): number {
 }
 
 export function compareProviderIds(left: string, right: string): number {
-  return left.localeCompare(right);
-}
-
-function compareCanonicalText(left: string, right: string): number {
-  const leftText = left.trim();
-  const rightText = right.trim();
-  const maxLength = Math.max(leftText.length, rightText.length);
-
-  for (let index = 0; index < maxLength; index += 1) {
-    const leftCode = leftText.codePointAt(index) ?? -1;
-    const rightCode = rightText.codePointAt(index) ?? -1;
-    if (leftCode !== rightCode) {
-      return leftCode - rightCode;
-    }
+  if (left === right) {
+    return 0;
   }
 
-  return 0;
+  return left < right ? -1 : 1;
 }
 
 function selectCanonicalText(existingText: string, candidateText: string): string {
   const existingTrimmed = existingText.trim();
   const candidateTrimmed = candidateText.trim();
-  const existingCanonical = existingTrimmed.toLocaleLowerCase();
-  const candidateCanonical = candidateTrimmed.toLocaleLowerCase();
+  const existingCanonical = existingTrimmed.toLowerCase();
+  const candidateCanonical = candidateTrimmed.toLowerCase();
 
   if (candidateCanonical < existingCanonical) {
     return candidateTrimmed;
@@ -72,7 +60,7 @@ function selectCanonicalText(existingText: string, candidateText: string): strin
     return existingTrimmed;
   }
 
-  return compareCanonicalText(candidateTrimmed, existingTrimmed) < 0
+  return compareProviderIds(candidateTrimmed, existingTrimmed) < 0
     ? candidateTrimmed
     : existingTrimmed;
 }
@@ -89,11 +77,11 @@ export function compareConsensusClaims(left: ConsensusClaim, right: ConsensusCla
     return supportQualityDelta;
   }
 
-  return left.text.localeCompare(right.text);
+  return compareProviderIds(left.text, right.text);
 }
 
 export function compareContestedClaims(left: ContestedClaim, right: ContestedClaim): number {
-  return left.text.localeCompare(right.text);
+  return compareProviderIds(left.text, right.text);
 }
 
 export function buildConsensusResult(input: {

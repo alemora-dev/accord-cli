@@ -67,12 +67,12 @@ describe("FinalAnswerSynthesizer", () => {
       contestedClaims: [
         {
           text: "The sky is gray.",
-          providerIds: ["gemini", "claude"]
+          providerIds: ["žed", "claude"]
         }
       ]
     });
 
-    expect(result.disagreements).toEqual(["The sky is gray. (claude, gemini)"]);
+    expect(result.disagreements).toEqual(["The sky is gray. (claude, žed)"]);
   });
 
   it("falls back cleanly when no consensus claims clear the threshold", () => {
