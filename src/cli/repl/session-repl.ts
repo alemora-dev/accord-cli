@@ -6,11 +6,10 @@ import { confirmDebateLaunch, promptForDebateTopic } from "../prompts/debate-pro
 import { renderSessionPlan } from "../presenters/session-presenter.js";
 
 const DEFAULT_PROVIDER_IDS = ["codex", "claude"];
-const DEFAULT_ROUNDS = 2;
+const FIXED_DEBATE_ROUNDS = 2;
 
 export interface SessionLaunchContext {
   providerIds: string[];
-  rounds: number;
 }
 
 export async function startSessionRepl(input?: {
@@ -23,8 +22,7 @@ export async function startSessionRepl(input?: {
   cancel?: (message: string) => void;
 }): Promise<void> {
   const launchContext = input?.launchContext ?? {
-    providerIds: DEFAULT_PROVIDER_IDS,
-    rounds: DEFAULT_ROUNDS
+    providerIds: DEFAULT_PROVIDER_IDS
   };
   const providers = input?.providers ?? [];
   const promptForTopic = input?.promptForTopic ?? promptForDebateTopic;
@@ -43,7 +41,7 @@ export async function startSessionRepl(input?: {
 
   const estimate = estimateRunCost({
     providerIds: launchContext.providerIds,
-    rounds: launchContext.rounds,
+    rounds: FIXED_DEBATE_ROUNDS,
     expectedPromptChars: topic.length * 20
   });
 

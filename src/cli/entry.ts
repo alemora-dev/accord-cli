@@ -9,29 +9,48 @@ import { ClaudeProvider } from "../providers/builtins/claude-provider.js";
 import { CodexProvider } from "../providers/builtins/codex-provider.js";
 import { GeminiProvider } from "../providers/builtins/gemini-provider.js";
 import { detectProviders } from "../providers/core/provider-detection.js";
+import type { AbstractProvider } from "../providers/core/abstract-provider.js";
 import { startSessionRepl } from "./repl/session-repl.js";
 import { confirmInteractiveLaunch, presentSetupSummary } from "./prompts/setup-prompts.js";
 
-const BUILTIN_PROVIDERS = [
+const BUILTIN_PROVIDERS: AbstractProvider[] = [
   new CodexProvider(),
   new ClaudeProvider(),
   new GeminiProvider()
-] as const;
+];
 
-export function buildProgram(): Command {
+export interface BuildProgramDependencies {
+  providers?: AbstractProvider[];
+  hasCommand?: (command: string) => Promise<boolean>;
+  startSessionRepl?: typeof startSessionRepl;
+  runDebate?: typeof runDebate;
+}
+
+export function buildProgram(input: BuildProgramDependencies = {}): Command {
+  const providers = input.providers ?? BUILTIN_PROVIDERS;
+  const hasCommand = input.hasCommand ?? defaultHasCommand;
+  const startSessionReplFn = input.startSessionRepl ?? startSessionRepl;
+  const runDebateFn = input.runDebate ?? runDebate;
   const program = new Command();
 
   program
     .name("accord")
     .description("Run structured multi-agent research debates")
     .action(async () => {
-      await startSessionRepl({
+      const detectedProviderIds: string[] = [];
+
+      for (const provider of providers) {
+        if (await hasCommand(provider.command)) {
+          detectedProviderIds.push(provider.id);
+        }
+      }
+
+      await startSessionReplFn({
         launchContext: {
-          providerIds: BUILTIN_PROVIDERS.map((provider) => provider.id),
-          rounds: 2
+          providerIds: detectedProviderIds
         },
-        providers: [...BUILTIN_PROVIDERS],
-        runDebate
+        providers: [...providers],
+        runDebate: runDebateFn
       });
     });
 
@@ -40,7 +59,7 @@ export function buildProgram(): Command {
     .description("Configure local providers")
     .action(async () => {
       const summary = await runProviderSetup({
-        providers: BUILTIN_PROVIDERS.map((provider) => ({ ...provider })),
+        providers: providers.map((provider) => ({ id: provider.id, command: provider.command })),
         detectAvailableProviders: async (providers) => await detectProviders(providers, hasCommand)
       });
       const setupDetails = summary.providers
@@ -55,10 +74,9 @@ export function buildProgram(): Command {
             providerIds: summary.providers
               .filter((provider) => provider.status === "detected")
               .map((provider) => provider.id),
-            rounds: 2
           },
-          providers: [...BUILTIN_PROVIDERS],
-          runDebate
+          providers: [...providers],
+          runDebate: runDebateFn
         });
       }
     });
@@ -89,7 +107,7 @@ export function buildProgram(): Command {
   return program;
 }
 
-async function hasCommand(command: string): Promise<boolean> {
+async function defaultHasCommand(command: string): Promise<boolean> {
   const module = await import("node:child_process");
 
   return await new Promise<boolean>((resolve) => {

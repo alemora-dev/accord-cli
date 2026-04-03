@@ -21,6 +21,31 @@ describe("buildProgram", () => {
     expect(commandNames).toContain("resume");
     expect(commandNames).toContain("export");
   });
+
+  it("passes only detected built-in providers into the default launch path", async () => {
+    let receivedProviderIds: string[] | undefined;
+    const startSessionRepl = vi.fn(async (input?: { launchContext?: { providerIds: string[] } }) => {
+      receivedProviderIds = input?.launchContext?.providerIds;
+    });
+    const hasCommand = vi.fn(async (command: string) => command !== "claude");
+
+    const program = buildProgram({
+      hasCommand,
+      startSessionRepl
+    });
+
+    await program.parseAsync(["node", "accord"], { from: "node" });
+
+    expect(hasCommand).toHaveBeenCalledWith("codex");
+    expect(hasCommand).toHaveBeenCalledWith("claude");
+    expect(hasCommand).toHaveBeenCalledWith("gemini");
+    expect(startSessionRepl).toHaveBeenCalledOnce();
+
+    expect(receivedProviderIds).toEqual([
+      "codex",
+      "gemini"
+    ]);
+  });
 });
 
 describe("estimateRunCost", () => {
@@ -114,8 +139,7 @@ describe("startSessionRepl", () => {
 
     await startSessionRepl({
       launchContext: {
-        providerIds: ["alpha", "beta"],
-        rounds: 5
+        providerIds: ["alpha", "beta"]
       },
       promptForTopic: async () => "A focused topic",
       confirmLaunch: async () => false,
@@ -124,10 +148,8 @@ describe("startSessionRepl", () => {
     });
 
     expect(note).toHaveBeenCalledOnce();
-    expect(note.mock.calls[0]?.[0]).toContain("alpha");
-    expect(note.mock.calls[0]?.[0]).toContain("beta");
-    expect(note.mock.calls[0]?.[0]).not.toContain("codex");
-    expect(note.mock.calls[0]?.[0]).not.toContain("claude");
+    expect(note.mock.calls[0]?.[0]).toContain("alpha, beta across 2 rounds");
+    expect(note.mock.calls[0]?.[0]).not.toContain("undefined");
   });
 
   it("launches the debate runner with the selected providers after confirmation", async () => {
@@ -135,25 +157,25 @@ describe("startSessionRepl", () => {
     const cancel = vi.fn();
     const runDebateMock = vi.fn(
       async (input: { topic: string; providers: Array<{ id: string }> }): Promise<DebateOrchestrationResult> => ({
-      topic: input.topic,
-      selectedProviderIds: input.providers.map((provider) => provider.id),
-      rounds: [],
-      findings: [],
-      independentFindings: [],
-      reviewFindings: [],
-      independentArtifacts: [],
-      reviewArtifacts: [],
-      consensus: {
         topic: input.topic,
-        consensusClaims: [],
-        contestedClaims: [],
-        finalAnswer: {
-          answer: "Shared claim",
-          whyItWon: "Supported by codex and gemini after review.",
-          disagreements: [],
-          openQuestions: []
+        selectedProviderIds: input.providers.map((provider) => provider.id),
+        rounds: [],
+        findings: [],
+        independentFindings: [],
+        reviewFindings: [],
+        independentArtifacts: [],
+        reviewArtifacts: [],
+        consensus: {
+          topic: input.topic,
+          consensusClaims: [],
+          contestedClaims: [],
+          finalAnswer: {
+            answer: "Shared claim",
+            whyItWon: "Supported by codex and gemini after review.",
+            disagreements: [],
+            openQuestions: []
+          }
         }
-      }
       })
     );
     const codex = new FakeProvider("codex", ["Claim A"], ["Shared claim"]);
@@ -162,8 +184,7 @@ describe("startSessionRepl", () => {
 
     await startSessionRepl({
       launchContext: {
-        providerIds: ["codex", "gemini"],
-        rounds: 2
+        providerIds: ["codex", "gemini"]
       },
       providers: [codex, gemini, claude],
       promptForTopic: async () => "A focused topic",
