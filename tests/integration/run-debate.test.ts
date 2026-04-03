@@ -1,0 +1,53 @@
+import { describe, expect, it } from "vitest";
+import { runDebate } from "../../src/application/use-cases/run-debate.js";
+import { exportMarkdownReport } from "../../src/infrastructure/export/markdown-exporter.js";
+import { FakeProvider } from "../../src/testing/fakes/fake-provider.js";
+
+describe("runDebate", () => {
+  it("returns consensus from the cross-review round", async () => {
+    const codex = new FakeProvider("codex", ["Claim A"], ["Shared claim"]);
+    const claude = new FakeProvider("claude", ["Claim B"], ["Shared claim"]);
+    const gemini = new FakeProvider("gemini", ["Claim C"], ["Different review claim"]);
+
+    const result = await runDebate({
+      topic: "Debate topic",
+      providers: [codex, claude, gemini]
+    });
+
+    expect(result.rounds.map((round) => round.kind)).toEqual([
+      "independent",
+      "cross-review",
+      "consensus"
+    ]);
+    expect(result.consensus.consensusClaims).toEqual([
+      {
+        text: "Shared claim",
+        supportingProviderIds: ["codex", "claude"]
+      }
+    ]);
+    expect(claude.executionContexts[1]?.peerOutputs).toEqual([
+      JSON.stringify({
+        providerId: "codex",
+        claims: [{ id: "codex-0", text: "Claim A", support: "evidence-backed" }]
+      }),
+      JSON.stringify({
+        providerId: "gemini",
+        claims: [{ id: "gemini-0", text: "Claim C", support: "evidence-backed" }]
+      })
+    ]);
+  });
+});
+
+describe("exportMarkdownReport", () => {
+  it("renders a readable consensus report", () => {
+    const markdown = exportMarkdownReport({
+      topic: "Debate topic",
+      consensusClaims: [{ text: "Claim A", supportingProviderIds: ["codex", "claude"] }],
+      contestedClaims: [{ text: "Claim B", providerIds: ["gemini"] }]
+    });
+
+    expect(markdown).toContain("# Debate topic");
+    expect(markdown).toContain("Claim A");
+    expect(markdown).toContain("Claim B");
+  });
+});
