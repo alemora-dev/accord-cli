@@ -58,13 +58,13 @@ describe("GeminiProvider", () => {
       ]
     };
 
-    await provider.execute(context as never);
+    await provider.execute(context);
 
     expect(calls).toEqual([
       {
         command: "gemini",
         args: ["-p"],
-        input: provider.buildPrompt(context as never),
+        input: provider.buildPrompt(context),
         cwd: "/tmp/accord"
       }
     ]);
@@ -97,6 +97,32 @@ describe("GeminiProvider", () => {
     const provider = new GeminiProvider();
     const rawOutput = JSON.stringify({
       claims: [{ id: "c-1", text: "Sample claim" }]
+    });
+
+    expect(() => provider.normalize(rawOutput)).toThrow(
+      "Gemini CLI returned invalid finding payload"
+    );
+  });
+
+  it("rejects empty claims with an actionable error", () => {
+    const provider = new GeminiProvider();
+    const rawOutput = JSON.stringify({
+      claims: [],
+      evidence: [{ id: "e-1", summary: "Sample evidence" }],
+      confidence: 0.75
+    });
+
+    expect(() => provider.normalize(rawOutput)).toThrow(
+      "Gemini CLI returned invalid finding payload"
+    );
+  });
+
+  it("rejects confidence outside the normalized range", () => {
+    const provider = new GeminiProvider();
+    const rawOutput = JSON.stringify({
+      claims: [{ id: "c-1", text: "Sample claim", support: "evidence-backed" }],
+      evidence: [{ id: "e-1", summary: "Sample evidence" }],
+      confidence: 2
     });
 
     expect(() => provider.normalize(rawOutput)).toThrow(

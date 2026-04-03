@@ -21,7 +21,7 @@ class RichProvider extends AbstractProvider {
   }
 
   buildPrompt(context: ProviderExecutionContext): string {
-    return (context as any).peerFindings?.length ? "cross-review" : "independent";
+    return context.peerFindings?.length ? "cross-review" : "independent";
   }
 
   normalize(rawOutput: string) {
@@ -44,7 +44,7 @@ class RichProvider extends AbstractProvider {
       peerFindings: context.peerFindings ? context.peerFindings.map((finding) => ({ ...finding })) : undefined
     });
 
-    return JSON.stringify((context as any).peerFindings?.length ? this.reviewPayload : this.independentPayload);
+    return JSON.stringify(context.peerFindings?.length ? this.reviewPayload : this.independentPayload);
   }
 }
 
@@ -77,7 +77,7 @@ describe("DebateOrchestrator", () => {
       "Different review claim"
     ]);
     expect(codex.executionContexts).toHaveLength(2);
-    expect((codex.executionContexts[1] as any)?.peerFindings).toEqual([
+    expect(codex.executionContexts[1]?.peerFindings).toEqual([
       {
         providerId: "claude",
         claims: [{ id: "claude-0", text: "Claim B", support: "evidence-backed" }]
@@ -215,8 +215,8 @@ describe("DebateOrchestrator", () => {
 
     await new DebateOrchestrator().run("Topic", [codex, gemini]);
 
-    const reviewContext = codex.executionContexts[1] as any;
-    expect(reviewContext.peerFindings).toEqual([
+    const reviewContext = codex.executionContexts[1];
+    expect(reviewContext?.peerFindings).toEqual([
       {
         providerId: "gemini",
         claims: [{ id: "gemini-0", text: "Initial B", support: "evidence-backed" }],

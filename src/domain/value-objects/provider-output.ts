@@ -48,7 +48,7 @@ export const ProviderFindingPayloadSchema = z.object({
       })
     )
     .optional(),
-  confidence: z.number().optional()
+  confidence: z.number().min(0).max(1).optional()
 });
 
 export function parseProviderFinding(

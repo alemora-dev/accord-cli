@@ -59,13 +59,13 @@ describe("CodexProvider", () => {
       ]
     };
 
-    await provider.execute(context as never);
+    await provider.execute(context);
 
     expect(calls).toEqual([
       {
         command: "codex",
         args: ["exec", "--json"],
-        input: provider.buildPrompt(context as never),
+        input: provider.buildPrompt(context),
         cwd: "/tmp/accord"
       }
     ]);
@@ -118,6 +118,19 @@ describe("CodexProvider", () => {
     );
   });
 
+  it("rejects confidence outside the normalized range", () => {
+    const provider = new CodexProvider();
+    const rawOutput = JSON.stringify({
+      claims: [{ id: "c-1", text: "Sample claim", support: "evidence-backed" }],
+      evidence: [{ id: "e-1", summary: "Sample evidence" }],
+      confidence: 1.2
+    });
+
+    expect(() => provider.normalize(rawOutput)).toThrow(
+      "Codex returned invalid finding payload"
+    );
+  });
+
   it("renders structured peer findings in the cross-review prompt", () => {
     const prompt = buildCrossReviewPrompt("Topic", [
       {
@@ -126,7 +139,7 @@ describe("CodexProvider", () => {
         evidence: [{ id: "e-1", summary: "Evidence A" }],
         confidence: 0.4
       }
-    ] as never);
+    ]);
 
     expect(prompt).toContain("peer findings");
     expect(prompt).toContain('"providerId":"codex"');

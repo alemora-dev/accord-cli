@@ -65,7 +65,7 @@ describe("runDebate", () => {
         ]
       })
     ]);
-    expect((claude.executionContexts[1] as any)?.peerFindings).toEqual([
+    expect(claude.executionContexts[1]?.peerFindings).toEqual([
       {
         providerId: "codex",
         claims: [{ id: "codex-0", text: "Claim A", support: "evidence-backed" }]
