@@ -10,7 +10,7 @@ describe("ConsensusEngine", () => {
       },
       {
         providerId: "claude",
-        claims: [{ id: "c2", text: "Claim A", support: "inference" }]
+        claims: [{ id: "c2", text: "Claim A", support: "unsupported" }]
       },
       {
         providerId: "codex",
@@ -35,14 +35,13 @@ describe("ConsensusEngine", () => {
         text: "Claim B",
         strongestSupport: "evidence-backed",
         supportingProviderIds: ["codex", "gemini"]
-      },
-      {
-        text: "Claim A",
-        strongestSupport: "inference",
-        supportingProviderIds: ["claude", "zed"]
       }
     ]);
     expect(result.contestedClaims).toEqual([
+      {
+        text: "Claim A",
+        providerIds: ["claude", "zed"]
+      },
       {
         text: "Claim C",
         providerIds: ["codex", "gemini"]
@@ -51,7 +50,7 @@ describe("ConsensusEngine", () => {
     expect(result.finalAnswer).toEqual({
       answer: "Claim B",
       whyItWon: "Supported by codex and gemini after review.",
-      disagreements: ["Claim C (codex, gemini)"],
+      disagreements: ["Claim A (claude, zed)", "Claim C (codex, gemini)"],
       openQuestions: []
     });
   });

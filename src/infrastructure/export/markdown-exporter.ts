@@ -1,36 +1,32 @@
 import type {
-  BaseConsensusResult,
+  ConsensusResult,
   FinalAnswerResult
 } from "../../domain/models/consensus.js";
 
-export function exportMarkdownReport(
-  result: BaseConsensusResult & { finalAnswer?: FinalAnswerResult }
-): string {
+export function exportMarkdownReport(result: ConsensusResult): string {
   const lines = [
     `# ${result.topic}`,
     ""
   ];
 
-  if (result.finalAnswer) {
-    lines.push(
-      "## Final answer",
-      result.finalAnswer.answer,
-      "",
-      "## Why this won",
-      result.finalAnswer.whyItWon,
-      "",
-      "## Disagreements",
-      ...(result.finalAnswer.disagreements.length > 0
-        ? result.finalAnswer.disagreements.map((claim) => `- ${claim}`)
-        : ["- None"]),
-      "",
-      "## Open questions",
-      ...(result.finalAnswer.openQuestions.length > 0
-        ? result.finalAnswer.openQuestions.map((question) => `- ${question}`)
-        : ["- None"]),
-      ""
-    );
-  }
+  lines.push(
+    "## Final answer",
+    result.finalAnswer.answer,
+    "",
+    "## Why this won",
+    result.finalAnswer.whyItWon,
+    "",
+    "## Disagreements",
+    ...(result.finalAnswer.disagreements.length > 0
+      ? result.finalAnswer.disagreements.map((claim) => `- ${claim}`)
+      : ["- None"]),
+    "",
+    "## Open questions",
+    ...(result.finalAnswer.openQuestions.length > 0
+      ? result.finalAnswer.openQuestions.map((question) => `- ${question}`)
+      : ["- None"]),
+    ""
+  );
 
   lines.push(
     "## Consensus",
