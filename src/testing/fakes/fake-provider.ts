@@ -2,6 +2,7 @@ import type {
   ProviderExecutionContext,
   ProviderExecutionResult
 } from "../../domain/models/provider.js";
+import type { ProviderFindingPayload } from "../../domain/value-objects/provider-output.js";
 import { AbstractProvider } from "../../providers/core/abstract-provider.js";
 
 export class FakeProvider extends AbstractProvider {
@@ -24,7 +25,14 @@ export class FakeProvider extends AbstractProvider {
   }
 
   normalize(rawOutput: string): ProviderExecutionResult {
-    return { rawOutput };
+    const parsed = JSON.parse(rawOutput) as ProviderFindingPayload;
+
+    return {
+      providerId: this.id,
+      claims: parsed.claims ?? [],
+      evidence: parsed.evidence,
+      confidence: parsed.confidence
+    };
   }
 
   async execute(context: ProviderExecutionContext): Promise<string> {

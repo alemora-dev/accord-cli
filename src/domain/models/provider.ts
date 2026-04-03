@@ -1,3 +1,5 @@
+import type { ProviderFinding } from "../value-objects/provider-output.js";
+
 export interface ProviderDetectionResult {
   id: string;
   command: string;
@@ -10,6 +12,4 @@ export interface ProviderExecutionContext {
   peerOutputs?: string[];
 }
 
-export interface ProviderExecutionResult {
-  rawOutput: string;
-}
+export interface ProviderExecutionResult extends ProviderFinding {}

@@ -7,6 +7,7 @@ import { FakeProvider } from "../../../src/testing/fakes/fake-provider.js";
 class RichProvider extends AbstractProvider {
   readonly displayName: string;
   readonly command: string;
+  normalizeCalls = 0;
 
   constructor(
     readonly id: string,
@@ -23,7 +24,16 @@ class RichProvider extends AbstractProvider {
   }
 
   normalize(rawOutput: string) {
-    return { rawOutput };
+    this.normalizeCalls += 1;
+
+    const parsed = JSON.parse(rawOutput) as Record<string, unknown>;
+
+    return {
+      providerId: this.id,
+      claims: parsed.claims as never[],
+      evidence: parsed.evidence as never[],
+      confidence: parsed.confidence as number | undefined
+    };
   }
 
   async execute(context: ProviderExecutionContext): Promise<string> {
@@ -131,6 +141,36 @@ describe("DebateOrchestrator", () => {
     expect(result.reviewArtifacts[0]?.normalized.confidence).toBe(0.91);
     expect(result.reviewArtifacts[0]?.normalized.evidence).toEqual([
       { id: "codex-r0", summary: "codex review evidence" }
+    ]);
+    expect(codex.normalizeCalls).toBe(2);
+    expect(gemini.normalizeCalls).toBe(2);
+  });
+
+  it("calls provider normalization for each phase", async () => {
+    const codex = new RichProvider(
+      "codex",
+      {
+        answer: "codex answer",
+        claims: [{ id: "codex-0", text: "Initial A", support: "evidence-backed" }],
+        evidence: [{ id: "codex-e0", summary: "codex independent evidence" }],
+        confidence: 0.41
+      },
+      {
+        answer: "codex review answer",
+        claims: [{ id: "codex-0", text: "Reviewed A", support: "evidence-backed" }],
+        evidence: [{ id: "codex-r0", summary: "codex review evidence" }],
+        confidence: 0.91
+      }
+    );
+
+    const result = await new DebateOrchestrator().run("Topic", [codex]);
+
+    expect(codex.normalizeCalls).toBe(1);
+    expect(result.rounds.map((round) => round.kind)).toEqual(["independent", "consensus"]);
+    expect(result.reviewArtifacts).toHaveLength(0);
+    expect(result.findings.map((finding) => finding.claims[0]?.text)).toEqual(["Initial A"]);
+    expect(result.consensus.contestedClaims).toEqual([
+      { text: "Initial A", providerIds: ["codex"] }
     ]);
   });
 });

@@ -1,6 +1,5 @@
 import type { DebateRun, DebateRound } from "../models/debate.js";
 import type { ConsensusResult } from "../models/consensus.js";
-import type { ProviderFinding, ProviderFindingPayload } from "../value-objects/provider-output.js";
 import type { ProviderArtifact } from "../value-objects/debate-artifacts.js";
 import type { AbstractProvider } from "../../providers/core/abstract-provider.js";
 import { ConsensusEngine } from "./consensus-engine.js";
@@ -17,63 +16,58 @@ export class DebateOrchestrator {
     const rounds: DebateRound[] = [];
     const independentRound = this.startRound("r1", "independent");
     const independentArtifacts: ProviderArtifact[] = [];
+    const canReview = providers.length >= 2;
 
     for (const provider of providers) {
       const rawOutput = await provider.execute({ topic, workspaceDir });
       independentArtifacts.push({
         providerId: provider.id,
         rawOutput,
-        normalized: this.parseFinding(provider.id, rawOutput)
+        normalized: provider.normalize(rawOutput)
       });
     }
     rounds.push(this.completeRound(independentRound));
 
-    const reviewRound = this.startRound("r2", "cross-review");
     const reviewArtifacts: ProviderArtifact[] = [];
 
-    for (const [index, provider] of providers.entries()) {
-      const peerOutputs = independentArtifacts
-        .filter((_, findingIndex) => findingIndex !== index)
-        .map((artifact) => artifact.rawOutput);
-      const rawOutput = await provider.execute({
-        topic,
-        workspaceDir,
-        peerOutputs
-      });
-      reviewArtifacts.push({
-        providerId: provider.id,
-        rawOutput,
-        normalized: this.parseFinding(provider.id, rawOutput)
-      });
+    if (canReview) {
+      const reviewRound = this.startRound("r2", "cross-review");
+
+      for (const [index, provider] of providers.entries()) {
+        const peerOutputs = independentArtifacts
+          .filter((_, findingIndex) => findingIndex !== index)
+          .map((artifact) => artifact.rawOutput);
+        const rawOutput = await provider.execute({
+          topic,
+          workspaceDir,
+          peerOutputs
+        });
+        reviewArtifacts.push({
+          providerId: provider.id,
+          rawOutput,
+          normalized: provider.normalize(rawOutput)
+        });
+      }
+      rounds.push(this.completeRound(reviewRound));
     }
-    rounds.push(this.completeRound(reviewRound));
 
     const consensusRound = this.startRound("r3", "consensus");
+    const independentFindings = independentArtifacts.map((artifact) => artifact.normalized);
     const reviewFindings = reviewArtifacts.map((artifact) => artifact.normalized);
-    const consensus = this.consensusEngine.build(topic, reviewFindings);
+    const finalFindings = reviewFindings.length ? reviewFindings : independentFindings;
+    const consensus = this.consensusEngine.build(topic, finalFindings);
     rounds.push(this.completeRound(consensusRound));
 
     return {
       topic,
       selectedProviderIds: providers.map((provider) => provider.id),
       rounds,
-      findings: reviewFindings,
+      findings: finalFindings,
       independentArtifacts,
       reviewArtifacts,
-      independentFindings: independentArtifacts.map((artifact) => artifact.normalized),
+      independentFindings,
       reviewFindings,
       consensus
-    };
-  }
-
-  private parseFinding(providerId: string, rawOutput: string): ProviderFinding {
-    const parsed = JSON.parse(rawOutput) as ProviderFindingPayload;
-
-    return {
-      providerId,
-      claims: parsed.claims ?? [],
-      evidence: parsed.evidence,
-      confidence: parsed.confidence
     };
   }
 

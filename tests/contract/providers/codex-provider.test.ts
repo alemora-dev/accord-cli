@@ -66,8 +66,17 @@ describe("CodexProvider", () => {
 
   it("normalizes raw output without additional parsing", () => {
     const provider = new CodexProvider();
-    const rawOutput = "{\"answer\":\"Sample answer\"}";
+    const rawOutput = JSON.stringify({
+      claims: [{ id: "c-1", text: "Sample claim", support: "evidence-backed" }],
+      evidence: [{ id: "e-1", summary: "Sample evidence" }],
+      confidence: 0.75
+    });
 
-    expect(provider.normalize(rawOutput)).toEqual({ rawOutput });
+    expect(provider.normalize(rawOutput)).toEqual({
+      providerId: "codex",
+      claims: [{ id: "c-1", text: "Sample claim", support: "evidence-backed" }],
+      evidence: [{ id: "e-1", summary: "Sample evidence" }],
+      confidence: 0.75
+    });
   });
 });

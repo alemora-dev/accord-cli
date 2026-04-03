@@ -76,6 +76,25 @@ describe("runDebate", () => {
       })
     ]);
   });
+
+  it("skips cross-review when only one provider is available", async () => {
+    const codex = new FakeProvider("codex", ["Claim A"], ["Reviewed claim"]);
+
+    const result = await runDebate({
+      topic: "Debate topic",
+      providers: [codex]
+    });
+
+    expect(result.rounds.map((round) => round.kind)).toEqual(["independent", "consensus"]);
+    expect(result.independentArtifacts).toHaveLength(1);
+    expect(result.reviewArtifacts).toHaveLength(0);
+    expect(result.independentFindings.map((finding) => finding.claims[0]?.text)).toEqual([
+      "Claim A"
+    ]);
+    expect(result.findings.map((finding) => finding.claims[0]?.text)).toEqual(["Claim A"]);
+    expect(codex.executionContexts).toHaveLength(1);
+    expect(codex.executionContexts[0]?.peerOutputs).toBeUndefined();
+  });
 });
 
 describe("exportMarkdownReport", () => {

@@ -66,8 +66,17 @@ describe("GeminiProvider", () => {
 
   it("normalizes raw output without additional parsing", () => {
     const provider = new GeminiProvider();
-    const rawOutput = "{\"answer\":\"Sample answer\"}";
+    const rawOutput = JSON.stringify({
+      claims: [{ id: "c-1", text: "Sample claim", support: "evidence-backed" }],
+      evidence: [{ id: "e-1", summary: "Sample evidence" }],
+      confidence: 0.75
+    });
 
-    expect(provider.normalize(rawOutput)).toEqual({ rawOutput });
+    expect(provider.normalize(rawOutput)).toEqual({
+      providerId: "gemini",
+      claims: [{ id: "c-1", text: "Sample claim", support: "evidence-backed" }],
+      evidence: [{ id: "e-1", summary: "Sample evidence" }],
+      confidence: 0.75
+    });
   });
 });
