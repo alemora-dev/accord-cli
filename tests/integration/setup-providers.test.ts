@@ -7,7 +7,9 @@ import { resumeSession } from "../../src/application/use-cases/resume-session.js
 import { setupProviders } from "../../src/application/use-cases/setup-providers.js";
 import { buildProgram } from "../../src/cli/entry.js";
 import { startSessionRepl } from "../../src/cli/repl/session-repl.js";
+import type { DebateOrchestrationResult } from "../../src/domain/services/debate-orchestrator.js";
 import { SessionRepository } from "../../src/infrastructure/fs/session-repository.js";
+import { FakeProvider } from "../../src/testing/fakes/fake-provider.js";
 
 describe("buildProgram", () => {
   it("registers the interactive default command and setup helpers", () => {
@@ -126,5 +128,57 @@ describe("startSessionRepl", () => {
     expect(note.mock.calls[0]?.[0]).toContain("beta");
     expect(note.mock.calls[0]?.[0]).not.toContain("codex");
     expect(note.mock.calls[0]?.[0]).not.toContain("claude");
+  });
+
+  it("launches the debate runner with the selected providers after confirmation", async () => {
+    const note = vi.fn();
+    const cancel = vi.fn();
+    const runDebateMock = vi.fn(
+      async (input: { topic: string; providers: Array<{ id: string }> }): Promise<DebateOrchestrationResult> => ({
+      topic: input.topic,
+      selectedProviderIds: input.providers.map((provider) => provider.id),
+      rounds: [],
+      findings: [],
+      independentFindings: [],
+      reviewFindings: [],
+      independentArtifacts: [],
+      reviewArtifacts: [],
+      consensus: {
+        topic: input.topic,
+        consensusClaims: [],
+        contestedClaims: [],
+        finalAnswer: {
+          answer: "Shared claim",
+          whyItWon: "Supported by codex and gemini after review.",
+          disagreements: [],
+          openQuestions: []
+        }
+      }
+      })
+    );
+    const codex = new FakeProvider("codex", ["Claim A"], ["Shared claim"]);
+    const gemini = new FakeProvider("gemini", ["Claim B"], ["Shared claim"]);
+    const claude = new FakeProvider("claude", ["Claim C"], ["Shared claim"]);
+
+    await startSessionRepl({
+      launchContext: {
+        providerIds: ["codex", "gemini"],
+        rounds: 2
+      },
+      providers: [codex, gemini, claude],
+      promptForTopic: async () => "A focused topic",
+      confirmLaunch: async () => true,
+      note,
+      cancel,
+      runDebate: runDebateMock
+    });
+
+    expect(runDebateMock).toHaveBeenCalledOnce();
+    expect(runDebateMock.mock.calls[0]?.[0].providers.map((provider: { id: string }) => provider.id)).toEqual([
+      "codex",
+      "gemini"
+    ]);
+    expect(note.mock.calls.at(-1)?.[0]).toContain("Final answer: Shared claim");
+    expect(cancel).not.toHaveBeenCalled();
   });
 });

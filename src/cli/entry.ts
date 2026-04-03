@@ -2,16 +2,20 @@ import { Command } from "commander";
 import { resolveStorageDir } from "../infrastructure/fs/path-resolver.js";
 import { SessionRepository } from "../infrastructure/fs/session-repository.js";
 import { parseAccordConfig } from "../infrastructure/config/config-loader.js";
+import { runDebate } from "../application/use-cases/run-debate.js";
 import { runProviderSetup } from "../application/use-cases/setup-providers.js";
 import { resumeSession } from "../application/use-cases/resume-session.js";
+import { ClaudeProvider } from "../providers/builtins/claude-provider.js";
+import { CodexProvider } from "../providers/builtins/codex-provider.js";
+import { GeminiProvider } from "../providers/builtins/gemini-provider.js";
 import { detectProviders } from "../providers/core/provider-detection.js";
 import { startSessionRepl } from "./repl/session-repl.js";
 import { confirmInteractiveLaunch, presentSetupSummary } from "./prompts/setup-prompts.js";
 
 const BUILTIN_PROVIDERS = [
-  { id: "codex", command: "codex" },
-  { id: "claude", command: "claude" },
-  { id: "gemini", command: "gemini" }
+  new CodexProvider(),
+  new ClaudeProvider(),
+  new GeminiProvider()
 ] as const;
 
 export function buildProgram(): Command {
@@ -25,7 +29,9 @@ export function buildProgram(): Command {
         launchContext: {
           providerIds: BUILTIN_PROVIDERS.map((provider) => provider.id),
           rounds: 2
-        }
+        },
+        providers: [...BUILTIN_PROVIDERS],
+        runDebate
       });
     });
 
@@ -50,7 +56,9 @@ export function buildProgram(): Command {
               .filter((provider) => provider.status === "detected")
               .map((provider) => provider.id),
             rounds: 2
-          }
+          },
+          providers: [...BUILTIN_PROVIDERS],
+          runDebate
         });
       }
     });
