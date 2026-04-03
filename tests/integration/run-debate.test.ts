@@ -35,6 +35,36 @@ describe("runDebate", () => {
       "Shared claim",
       "Different review claim"
     ]);
+    expect(result.independentArtifacts.map((artifact) => artifact.rawOutput)).toEqual([
+      JSON.stringify({
+        answer: "codex answer",
+        claims: [{ id: "codex-0", text: "Claim A", support: "evidence-backed" }]
+      }),
+      JSON.stringify({
+        answer: "claude answer",
+        claims: [{ id: "claude-0", text: "Claim B", support: "evidence-backed" }]
+      }),
+      JSON.stringify({
+        answer: "gemini answer",
+        claims: [{ id: "gemini-0", text: "Claim C", support: "evidence-backed" }]
+      })
+    ]);
+    expect(result.reviewArtifacts.map((artifact) => artifact.rawOutput)).toEqual([
+      JSON.stringify({
+        answer: "codex answer",
+        claims: [{ id: "codex-0", text: "Shared claim", support: "evidence-backed" }]
+      }),
+      JSON.stringify({
+        answer: "claude answer",
+        claims: [{ id: "claude-0", text: "Shared claim", support: "evidence-backed" }]
+      }),
+      JSON.stringify({
+        answer: "gemini answer",
+        claims: [
+          { id: "gemini-0", text: "Different review claim", support: "evidence-backed" }
+        ]
+      })
+    ]);
     expect(claude.executionContexts[1]?.peerOutputs).toEqual([
       JSON.stringify({
         answer: "codex answer",

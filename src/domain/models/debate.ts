@@ -1,4 +1,5 @@
 import type { ProviderFinding } from "../value-objects/provider-output.js";
+import type { DebateArtifacts } from "../value-objects/debate-artifacts.js";
 
 export interface DebateRound {
   id: string;
@@ -7,7 +8,7 @@ export interface DebateRound {
   completedAt?: string;
 }
 
-export interface DebateRun {
+export interface DebateRun extends DebateArtifacts {
   topic: string;
   selectedProviderIds: string[];
   rounds: DebateRound[];

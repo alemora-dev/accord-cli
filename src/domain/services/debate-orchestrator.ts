@@ -58,6 +58,8 @@ export class DebateOrchestrator {
       selectedProviderIds: providers.map((provider) => provider.id),
       rounds,
       findings: reviewFindings,
+      independentArtifacts,
+      reviewArtifacts,
       independentFindings: independentArtifacts.map((artifact) => artifact.normalized),
       reviewFindings,
       consensus
@@ -69,7 +71,9 @@ export class DebateOrchestrator {
 
     return {
       providerId,
-      claims: parsed.claims ?? []
+      claims: parsed.claims ?? [],
+      evidence: parsed.evidence,
+      confidence: parsed.confidence
     };
   }
 
