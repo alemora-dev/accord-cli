@@ -2,7 +2,7 @@ import type {
   ProviderExecutionContext,
   ProviderExecutionResult
 } from "../../domain/models/provider.js";
-import type { ProviderFindingPayload } from "../../domain/value-objects/provider-output.js";
+import { parseProviderFinding } from "../../domain/value-objects/provider-output.js";
 import { ProcessRunner } from "../../infrastructure/process/process-runner.js";
 import { AbstractProvider } from "../core/abstract-provider.js";
 import { buildCrossReviewPrompt } from "../prompts/cross-review-round.js";
@@ -37,13 +37,6 @@ export class CodexProvider extends AbstractProvider {
   }
 
   normalize(rawOutput: string): ProviderExecutionResult {
-    const parsed = JSON.parse(rawOutput) as ProviderFindingPayload;
-
-    return {
-      providerId: this.id,
-      claims: parsed.claims ?? [],
-      evidence: parsed.evidence,
-      confidence: parsed.confidence
-    };
+    return parseProviderFinding(rawOutput, this.id, this.displayName);
   }
 }

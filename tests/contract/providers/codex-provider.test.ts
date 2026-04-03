@@ -62,6 +62,10 @@ describe("CodexProvider", () => {
     expect(calls[0]?.input).toContain("reviewing peer outputs");
     expect(calls[0]?.input).toContain("peer output A");
     expect(calls[0]?.input).toContain("peer output B");
+    expect(calls[0]?.input).toContain("Return JSON");
+    expect(calls[0]?.input).toContain("claims");
+    expect(calls[0]?.input).toContain("evidence");
+    expect(calls[0]?.input).toContain("confidence");
   });
 
   it("normalizes raw output without additional parsing", () => {
@@ -78,5 +82,16 @@ describe("CodexProvider", () => {
       evidence: [{ id: "e-1", summary: "Sample evidence" }],
       confidence: 0.75
     });
+  });
+
+  it("rejects malformed raw output with an actionable error", () => {
+    const provider = new CodexProvider();
+    const rawOutput = JSON.stringify({
+      claims: [{ id: "c-1", text: "Sample claim" }]
+    });
+
+    expect(() => provider.normalize(rawOutput)).toThrow(
+      "Codex returned invalid finding payload"
+    );
   });
 });
