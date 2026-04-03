@@ -68,6 +68,7 @@ describe("DebateOrchestrator", () => {
     expect(result.consensus.consensusClaims).toEqual([
       {
         text: "Shared claim",
+        strongestSupport: "evidence-backed",
         supportingProviderIds: ["claude", "codex"]
       }
     ]);

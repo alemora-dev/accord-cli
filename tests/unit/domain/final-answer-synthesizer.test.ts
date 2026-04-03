@@ -9,7 +9,13 @@ describe("FinalAnswerSynthesizer", () => {
       topic: "What color is the sky?",
       consensusClaims: [
         {
-          text: "The sky is blue.",
+          text: "The sky is alpha.",
+          strongestSupport: "inference",
+          supportingProviderIds: ["codex", "gemini"]
+        },
+        {
+          text: "The sky is zulu.",
+          strongestSupport: "evidence-backed",
           supportingProviderIds: ["codex", "gemini"]
         }
       ],
@@ -25,7 +31,13 @@ describe("FinalAnswerSynthesizer", () => {
       topic: "What color is the sky?",
       consensusClaims: [
         {
-          text: "The sky is blue.",
+          text: "The sky is zulu.",
+          strongestSupport: "evidence-backed",
+          supportingProviderIds: ["gemini", "codex"]
+        },
+        {
+          text: "The sky is alpha.",
+          strongestSupport: "inference",
           supportingProviderIds: ["gemini", "codex"]
         }
       ],
@@ -38,11 +50,33 @@ describe("FinalAnswerSynthesizer", () => {
     });
 
     expect(resultA).toEqual({
-      answer: "The sky is blue.",
+      answer: "The sky is zulu.",
       whyItWon: "Supported by codex and gemini after review.",
       disagreements: ["The sky is gray. (claude)"],
       openQuestions: []
     });
     expect(resultB).toEqual(resultA);
+  });
+
+  it("falls back cleanly when no consensus claims clear the threshold", () => {
+    const synthesizer = new FinalAnswerSynthesizer();
+
+    const result = synthesizer.build({
+      topic: "What color is the sky?",
+      consensusClaims: [],
+      contestedClaims: [
+        {
+          text: "The sky is gray.",
+          providerIds: ["claude", "gemini"]
+        }
+      ]
+    });
+
+    expect(result).toEqual({
+      answer: "No clear consensus was reached.",
+      whyItWon: "No claim had enough support after review.",
+      disagreements: ["The sky is gray. (claude, gemini)"],
+      openQuestions: []
+    });
   });
 });

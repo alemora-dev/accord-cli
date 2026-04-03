@@ -1,8 +1,9 @@
-import type { ProviderFinding } from "../value-objects/provider-output.js";
+import type { ProviderFinding, SupportLevel } from "../value-objects/provider-output.js";
 
 export interface ConsensusClaim {
   text: string;
   supportingProviderIds: string[];
+  strongestSupport: SupportLevel;
 }
 
 export interface ContestedClaim {
@@ -27,20 +28,61 @@ export interface ConsensusResult extends BaseConsensusResult {
   finalAnswer: FinalAnswerResult;
 }
 
+const SUPPORT_LEVEL_SCORE: Record<SupportLevel, number> = {
+  "evidence-backed": 3,
+  inference: 2,
+  speculation: 1,
+  unsupported: 0
+};
+
+export function getSupportScore(level: SupportLevel): number {
+  return SUPPORT_LEVEL_SCORE[level];
+}
+
+export function compareProviderIds(left: string, right: string): number {
+  return left.localeCompare(right);
+}
+
+export function compareConsensusClaims(left: ConsensusClaim, right: ConsensusClaim): number {
+  const supportCountDelta =
+    right.supportingProviderIds.length - left.supportingProviderIds.length;
+  if (supportCountDelta !== 0) {
+    return supportCountDelta;
+  }
+
+  const supportQualityDelta = getSupportScore(right.strongestSupport) - getSupportScore(left.strongestSupport);
+  if (supportQualityDelta !== 0) {
+    return supportQualityDelta;
+  }
+
+  return left.text.localeCompare(right.text);
+}
+
+export function compareContestedClaims(left: ContestedClaim, right: ContestedClaim): number {
+  return left.text.localeCompare(right.text);
+}
+
 export function buildConsensusResult(input: {
   topic: string;
   findings: ProviderFinding[];
 }): BaseConsensusResult {
-  const groups = new Map<string, { text: string; providerIds: Set<string> }>();
+  const groups = new Map<
+    string,
+    { text: string; providerIds: Set<string>; strongestSupport: SupportLevel }
+  >();
 
   for (const finding of input.findings) {
     for (const claim of finding.claims) {
       const key = claim.text.trim().toLowerCase();
       const entry = groups.get(key) ?? {
         text: claim.text,
-        providerIds: new Set<string>()
+        providerIds: new Set<string>(),
+        strongestSupport: claim.support
       };
       entry.providerIds.add(finding.providerId);
+      if (getSupportScore(claim.support) > getSupportScore(entry.strongestSupport)) {
+        entry.strongestSupport = claim.support;
+      }
       groups.set(key, entry);
     }
   }
@@ -48,28 +90,21 @@ export function buildConsensusResult(input: {
   const consensusClaims: ConsensusClaim[] = [];
   const contestedClaims: ContestedClaim[] = [];
 
-  for (const { text, providerIds } of groups.values()) {
-    const normalizedProviders = [...providerIds].sort((left, right) =>
-      left.localeCompare(right)
-    );
-    if (normalizedProviders.length >= 2) {
-      consensusClaims.push({ text, supportingProviderIds: normalizedProviders });
+  for (const { text, providerIds, strongestSupport } of groups.values()) {
+    const normalizedProviders = [...providerIds].sort(compareProviderIds);
+    if (normalizedProviders.length >= 2 && getSupportScore(strongestSupport) >= 2) {
+      consensusClaims.push({
+        text,
+        supportingProviderIds: normalizedProviders,
+        strongestSupport
+      });
     } else {
       contestedClaims.push({ text, providerIds: normalizedProviders });
     }
   }
 
-  consensusClaims.sort((left, right) => {
-    const supportDelta =
-      right.supportingProviderIds.length - left.supportingProviderIds.length;
-    if (supportDelta !== 0) {
-      return supportDelta;
-    }
-
-    return left.text.localeCompare(right.text);
-  });
-
-  contestedClaims.sort((left, right) => left.text.localeCompare(right.text));
+  consensusClaims.sort(compareConsensusClaims);
+  contestedClaims.sort(compareContestedClaims);
 
   return {
     topic: input.topic,

@@ -22,6 +22,7 @@ describe("runDebate", () => {
     expect(result.consensus.consensusClaims).toEqual([
       {
         text: "Shared claim",
+        strongestSupport: "evidence-backed",
         supportingProviderIds: ["claude", "codex"]
       }
     ]);
@@ -101,11 +102,26 @@ describe("exportMarkdownReport", () => {
   it("renders a readable consensus report", () => {
     const markdown = exportMarkdownReport({
       topic: "Debate topic",
-      consensusClaims: [{ text: "Claim A", supportingProviderIds: ["codex", "claude"] }],
-      contestedClaims: [{ text: "Claim B", providerIds: ["gemini"] }]
+      consensusClaims: [
+        {
+          text: "Claim A",
+          strongestSupport: "evidence-backed",
+          supportingProviderIds: ["claude", "codex"]
+        }
+      ],
+      contestedClaims: [{ text: "Claim B", providerIds: ["gemini"] }],
+      finalAnswer: {
+        answer: "Claim A",
+        whyItWon: "Supported by claude and codex after review.",
+        disagreements: ["Claim B (gemini)"],
+        openQuestions: []
+      }
     });
 
     expect(markdown).toContain("# Debate topic");
+    expect(markdown).toContain("## Final answer");
+    expect(markdown).toContain("Claim A");
+    expect(markdown).toContain("Why this won");
     expect(markdown).toContain("Claim A");
     expect(markdown).toContain("Claim B");
   });
