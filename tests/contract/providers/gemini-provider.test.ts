@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { ProviderExecutionContext } from "../../../src/domain/models/provider.js";
 import { GeminiProvider } from "../../../src/providers/builtins/gemini-provider.js";
 
 function createRunnerDouble() {
@@ -49,14 +50,14 @@ describe("GeminiProvider", () => {
       peerFindings: [
         {
           providerId: "peer-a",
-          claims: [{ id: "peer-a-0", text: "Claim A", support: "evidence-backed" }]
+          claims: [{ id: "peer-a-0", text: "Claim A", support: "evidence-backed" as const }]
         },
         {
           providerId: "peer-b",
-          claims: [{ id: "peer-b-0", text: "Claim B", support: "evidence-backed" }]
+          claims: [{ id: "peer-b-0", text: "Claim B", support: "evidence-backed" as const }]
         }
       ]
-    };
+    } satisfies ProviderExecutionContext;
 
     await provider.execute(context);
 

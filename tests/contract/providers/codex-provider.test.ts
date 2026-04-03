@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { ProviderExecutionContext } from "../../../src/domain/models/provider.js";
 import { CodexProvider } from "../../../src/providers/builtins/codex-provider.js";
 import { buildCrossReviewPrompt } from "../../../src/providers/prompts/cross-review-round.js";
 
@@ -50,14 +51,14 @@ describe("CodexProvider", () => {
       peerFindings: [
         {
           providerId: "peer-a",
-          claims: [{ id: "peer-a-0", text: "Claim A", support: "evidence-backed" }]
+          claims: [{ id: "peer-a-0", text: "Claim A", support: "evidence-backed" as const }]
         },
         {
           providerId: "peer-b",
-          claims: [{ id: "peer-b-0", text: "Claim B", support: "evidence-backed" }]
+          claims: [{ id: "peer-b-0", text: "Claim B", support: "evidence-backed" as const }]
         }
       ]
-    };
+    } satisfies ProviderExecutionContext;
 
     await provider.execute(context);
 
