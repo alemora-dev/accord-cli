@@ -43,6 +43,40 @@ export function compareProviderIds(left: string, right: string): number {
   return left.localeCompare(right);
 }
 
+function compareCanonicalText(left: string, right: string): number {
+  const leftText = left.trim();
+  const rightText = right.trim();
+  const maxLength = Math.max(leftText.length, rightText.length);
+
+  for (let index = 0; index < maxLength; index += 1) {
+    const leftCode = leftText.codePointAt(index) ?? -1;
+    const rightCode = rightText.codePointAt(index) ?? -1;
+    if (leftCode !== rightCode) {
+      return leftCode - rightCode;
+    }
+  }
+
+  return 0;
+}
+
+function selectCanonicalText(existingText: string, candidateText: string): string {
+  const existingTrimmed = existingText.trim();
+  const candidateTrimmed = candidateText.trim();
+  const existingCanonical = existingTrimmed.toLocaleLowerCase();
+  const candidateCanonical = candidateTrimmed.toLocaleLowerCase();
+
+  if (candidateCanonical < existingCanonical) {
+    return candidateTrimmed;
+  }
+  if (candidateCanonical > existingCanonical) {
+    return existingTrimmed;
+  }
+
+  return compareCanonicalText(candidateTrimmed, existingTrimmed) < 0
+    ? candidateTrimmed
+    : existingTrimmed;
+}
+
 export function compareConsensusClaims(left: ConsensusClaim, right: ConsensusClaim): number {
   const supportCountDelta =
     right.supportingProviderIds.length - left.supportingProviderIds.length;
@@ -85,6 +119,7 @@ export function buildConsensusResult(input: {
         qualifyingProviderIds: new Set<string>(),
         strongestSupport: claim.support
       };
+      entry.text = selectCanonicalText(entry.text, claim.text);
       entry.providerIds.add(finding.providerId);
       if (getSupportScore(claim.support) >= 2) {
         entry.qualifyingProviderIds.add(finding.providerId);

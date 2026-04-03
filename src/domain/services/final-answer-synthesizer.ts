@@ -28,7 +28,8 @@ export class FinalAnswerSynthesizer {
         ? `Supported by ${supportingProviderIds.join(" and ")} after review.`
         : "No claim had enough support after review.",
       disagreements: contestedClaims.map(
-        (claim) => `${claim.text} (${claim.providerIds.join(", ")})`
+        (claim) =>
+          `${claim.text} (${[...claim.providerIds].sort(compareProviderIds).join(", ")})`
       ),
       openQuestions: []
     };

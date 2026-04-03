@@ -58,6 +58,23 @@ describe("FinalAnswerSynthesizer", () => {
     expect(resultB).toEqual(resultA);
   });
 
+  it("sorts provider ids inside disagreement strings", () => {
+    const synthesizer = new FinalAnswerSynthesizer();
+
+    const result = synthesizer.build({
+      topic: "What color is the sky?",
+      consensusClaims: [],
+      contestedClaims: [
+        {
+          text: "The sky is gray.",
+          providerIds: ["gemini", "claude"]
+        }
+      ]
+    });
+
+    expect(result.disagreements).toEqual(["The sky is gray. (claude, gemini)"]);
+  });
+
   it("falls back cleanly when no consensus claims clear the threshold", () => {
     const synthesizer = new FinalAnswerSynthesizer();
 

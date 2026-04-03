@@ -2,6 +2,27 @@ import { describe, expect, it } from "vitest";
 import { ConsensusEngine } from "../../../src/domain/services/consensus-engine.js";
 
 describe("ConsensusEngine", () => {
+  it("chooses a canonical display text for equivalent casing and whitespace", () => {
+    const result = new ConsensusEngine().build("Topic", [
+      {
+        providerId: "codex",
+        claims: [{ id: "c1", text: "  claim a  ", support: "evidence-backed" }]
+      },
+      {
+        providerId: "claude",
+        claims: [{ id: "c2", text: "Claim A", support: "evidence-backed" }]
+      }
+    ]);
+
+    expect(result.consensusClaims).toEqual([
+      {
+        text: "Claim A",
+        strongestSupport: "evidence-backed",
+        supportingProviderIds: ["claude", "codex"]
+      }
+    ]);
+  });
+
   it("filters low-quality repeats and ranks stronger support first", () => {
     const result = new ConsensusEngine().build("Topic", [
       {

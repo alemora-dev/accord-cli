@@ -36,6 +36,12 @@ describe("runDebate", () => {
       "Shared claim",
       "Different review claim"
     ]);
+    expect(result.consensus.finalAnswer).toEqual({
+      answer: "Shared claim",
+      whyItWon: "Supported by claude and codex after review.",
+      disagreements: ["Different review claim (gemini)"],
+      openQuestions: []
+    });
     expect(result.independentArtifacts.map((artifact) => artifact.rawOutput)).toEqual([
       JSON.stringify({
         answer: "codex answer",
