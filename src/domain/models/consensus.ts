@@ -5,10 +5,23 @@ export interface ConsensusClaim {
   supportingProviderIds: string[];
 }
 
+export interface ContestedClaim {
+  text: string;
+  providerIds: string[];
+}
+
+export interface FinalAnswerResult {
+  answer: string;
+  whyItWon: string;
+  disagreements: string[];
+  openQuestions: string[];
+}
+
 export interface ConsensusResult {
   topic: string;
   consensusClaims: ConsensusClaim[];
-  contestedClaims: { text: string; providerIds: string[] }[];
+  contestedClaims: ContestedClaim[];
+  finalAnswer?: FinalAnswerResult;
 }
 
 export function buildConsensusResult(input: {
@@ -30,7 +43,7 @@ export function buildConsensusResult(input: {
   }
 
   const consensusClaims: ConsensusClaim[] = [];
-  const contestedClaims: { text: string; providerIds: string[] }[] = [];
+  const contestedClaims: ContestedClaim[] = [];
 
   for (const { text, providerIds } of groups.values()) {
     const normalizedProviders = [...providerIds];
