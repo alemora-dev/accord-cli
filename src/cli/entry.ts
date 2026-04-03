@@ -24,6 +24,7 @@ export interface BuildProgramDependencies {
   hasCommand?: (command: string) => Promise<boolean>;
   startSessionRepl?: typeof startSessionRepl;
   runDebate?: typeof runDebate;
+  confirmInteractiveLaunch?: typeof confirmInteractiveLaunch;
 }
 
 export function buildProgram(input: BuildProgramDependencies = {}): Command {
@@ -31,6 +32,7 @@ export function buildProgram(input: BuildProgramDependencies = {}): Command {
   const hasCommand = input.hasCommand ?? defaultHasCommand;
   const startSessionReplFn = input.startSessionRepl ?? startSessionRepl;
   const runDebateFn = input.runDebate ?? runDebate;
+  const confirmInteractiveLaunchFn = input.confirmInteractiveLaunch ?? confirmInteractiveLaunch;
   const program = new Command();
 
   program
@@ -68,8 +70,8 @@ export function buildProgram(input: BuildProgramDependencies = {}): Command {
 
       presentSetupSummary(setupDetails);
 
-      if (summary.canLaunch && (await confirmInteractiveLaunch())) {
-        await startSessionRepl({
+      if (summary.canLaunch && (await confirmInteractiveLaunchFn())) {
+        await startSessionReplFn({
           launchContext: {
             providerIds: summary.providers
               .filter((provider) => provider.status === "detected")

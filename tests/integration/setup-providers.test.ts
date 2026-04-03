@@ -46,6 +46,31 @@ describe("buildProgram", () => {
       "gemini"
     ]);
   });
+
+  it("uses the injected launch helper for the setup confirmation path", async () => {
+    let receivedProviderIds: string[] | undefined;
+    const startSessionRepl = vi.fn(async (input?: { launchContext?: { providerIds: string[] } }) => {
+      receivedProviderIds = input?.launchContext?.providerIds;
+    });
+    const hasCommand = vi.fn(async () => true);
+    const confirmInteractiveLaunch = vi.fn(async () => true);
+
+    const program = buildProgram({
+      hasCommand,
+      startSessionRepl,
+      confirmInteractiveLaunch
+    });
+
+    await program.parseAsync(["node", "accord", "setup"], { from: "node" });
+
+    expect(confirmInteractiveLaunch).toHaveBeenCalledOnce();
+    expect(startSessionRepl).toHaveBeenCalledOnce();
+    expect(receivedProviderIds).toEqual([
+      "codex",
+      "claude",
+      "gemini"
+    ]);
+  });
 });
 
 describe("estimateRunCost", () => {
