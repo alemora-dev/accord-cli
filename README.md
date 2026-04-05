@@ -20,6 +20,13 @@ Print the current release version:
 ./bin/accord --version
 ```
 
+Generate the next semantic version or bump `VERSION` automatically:
+
+```bash
+./scripts/version.sh next patch
+./scripts/version.sh bump patch
+```
+
 Primary role-order configuration:
 
 ```bash
@@ -119,8 +126,8 @@ That writes a versioned tarball to `dist/`.
 Publishing is tag-driven:
 
 ```bash
-git tag "v$(cat VERSION)"
-git push origin "v$(cat VERSION)"
+git tag "v$(./scripts/version.sh current)"
+git push origin "v$(./scripts/version.sh current)"
 ```
 
 That creates a GitHub Release with the tarball attached and publishes a matching package to GHCR.

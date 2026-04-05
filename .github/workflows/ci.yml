@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Verify shell syntax
-        run: bash -n bin/accord accord/lib/common.sh accord/lib/pipeline.sh accord/lib/prompts.sh accord/lib/providers.sh tests/smoke.sh
+        run: bash -n bin/accord accord/lib/common.sh accord/lib/pipeline.sh accord/lib/prompts.sh accord/lib/providers.sh scripts/version.sh tests/smoke.sh
 
       - name: Run smoke suite
         run: bash tests/smoke.sh

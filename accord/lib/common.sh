@@ -23,8 +23,8 @@ accord::version() {
     return
   fi
 
-  if [ -n "${ACCORD_ROOT:-}" ] && [ -f "$ACCORD_ROOT/VERSION" ]; then
-    cat "$ACCORD_ROOT/VERSION"
+  if [ -n "${ACCORD_ROOT:-}" ] && [ -f "$ACCORD_ROOT/scripts/version.sh" ]; then
+    bash "$ACCORD_ROOT/scripts/version.sh" current
     return
   fi
 

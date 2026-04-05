@@ -173,6 +173,40 @@ test_version_flag_prints_version_and_help_mentions_it() {
   assert_text_contains "$help_output" "--version"
 }
 
+test_version_script_reads_calculates_and_bumps_versions() {
+  local tmpdir current next_patch next_minor next_major bumped
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+  printf '1.2.3\n' >"$tmpdir/VERSION"
+
+  current="$(
+    ACCORD_VERSION_ROOT="$tmpdir" \
+      "$ROOT/scripts/version.sh" current
+  )"
+  next_patch="$(
+    ACCORD_VERSION_ROOT="$tmpdir" \
+      "$ROOT/scripts/version.sh" next patch
+  )"
+  next_minor="$(
+    ACCORD_VERSION_ROOT="$tmpdir" \
+      "$ROOT/scripts/version.sh" next minor
+  )"
+  next_major="$(
+    ACCORD_VERSION_ROOT="$tmpdir" \
+      "$ROOT/scripts/version.sh" next major
+  )"
+  bumped="$(
+    ACCORD_VERSION_ROOT="$tmpdir" \
+      "$ROOT/scripts/version.sh" bump patch
+  )"
+
+  assert_equals "1.2.3" "$current"
+  assert_equals "1.2.4" "$next_patch"
+  assert_equals "1.3.0" "$next_minor"
+  assert_equals "2.0.0" "$next_major"
+  assert_equals "1.2.4" "$bumped"
+  assert_contains "$tmpdir/VERSION" "1.2.4"
+}
+
 test_full_run_creates_expected_artifacts() {
   local tmpdir fake_bin run_dir
   tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
@@ -569,6 +603,7 @@ test_ci_workflow_builds_and_uploads_release_archive() {
   assert_contains "$workflow" "bash scripts/package.sh"
   assert_contains "$workflow" "actions/upload-artifact@v4"
   assert_contains "$workflow" "dist/accord-*.tar.gz"
+  assert_contains "$workflow" "scripts/version.sh"
 }
 
 test_release_workflow_publishes_github_release_and_package() {
@@ -586,7 +621,7 @@ test_release_workflow_publishes_github_release_and_package() {
   assert_contains "$workflow" "oras-project/setup-oras@v1"
   assert_contains "$workflow" "ghcr.io/"
   assert_contains "$workflow" "oras push"
-  assert_contains "$workflow" "cat VERSION"
+  assert_contains "$workflow" "scripts/version.sh current"
 }
 
 main() {
@@ -611,6 +646,7 @@ main() {
   test_configured_provider_aliases_reuse_builtin_styles
   test_long_prompt_is_compacted_into_safe_run_and_artifact_names
   test_version_flag_prints_version_and_help_mentions_it
+  test_version_script_reads_calculates_and_bumps_versions
   test_package_script_creates_a_versioned_archive
   test_ci_workflow_builds_and_uploads_release_archive
   test_release_workflow_publishes_github_release_and_package

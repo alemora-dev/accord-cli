@@ -8,6 +8,7 @@ Accord is intentionally small:
 - [`accord/lib/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord/lib) contains the shell helpers
 - [`accord/prompts/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord/prompts) contains the stage-specific prompt assets
 - [`VERSION`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/VERSION) is the single source of truth for release versioning
+- [`scripts/version.sh`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/scripts/version.sh) reads and bumps the semantic version
 - [`scripts/package.sh`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/scripts/package.sh) creates a small release archive in `dist/`
 - [`.github/workflows/release.yml`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/.github/workflows/release.yml) publishes tagged releases to GitHub Releases and GHCR
 - `runs/` stores generated markdown artifacts for each execution
@@ -39,7 +40,7 @@ There is no session model, build step, or internal TypeScript domain layer anymo
 11. Run one debate revision per debater after reading peer opinions.
 12. Run final synthesis through the coordinator and write `<topic>_final_1.md`.
 13. Write `run_summary.md` with roles, provider styles, artifact names, and summary cost/token placeholders.
-14. Read `VERSION` for `--version` output and package naming.
+14. Read the current version through `scripts/version.sh` for `--version`, package naming, and tag validation.
 
 ## Release Flow
 
