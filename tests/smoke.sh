@@ -610,6 +610,7 @@ test_release_workflow_publishes_github_release_and_package() {
   local workflow="$ROOT/.github/workflows/release.yml"
 
   assert_file "$workflow"
+  assert_contains "$workflow" "workflow_call:"
   assert_contains "$workflow" "push:"
   assert_contains "$workflow" "tags:"
   assert_contains "$workflow" "v*"
@@ -622,6 +623,22 @@ test_release_workflow_publishes_github_release_and_package() {
   assert_contains "$workflow" "ghcr.io/"
   assert_contains "$workflow" "oras push"
   assert_contains "$workflow" "scripts/version.sh current"
+  assert_contains "$workflow" 'ref: ${{ inputs.tag || github.ref_name }}'
+}
+
+test_auto_tag_workflow_creates_and_publishes_missing_version_tags() {
+  local workflow="$ROOT/.github/workflows/auto-tag.yml"
+
+  assert_file "$workflow"
+  assert_contains "$workflow" "push:"
+  assert_contains "$workflow" "branches:"
+  assert_contains "$workflow" "main"
+  assert_contains "$workflow" "contents: write"
+  assert_contains "$workflow" "git fetch --tags"
+  assert_contains "$workflow" "scripts/version.sh current"
+  assert_contains "$workflow" "git tag -a"
+  assert_contains "$workflow" "git push origin"
+  assert_contains "$workflow" "uses: ./.github/workflows/release.yml"
 }
 
 main() {
@@ -650,6 +667,7 @@ main() {
   test_package_script_creates_a_versioned_archive
   test_ci_workflow_builds_and_uploads_release_archive
   test_release_workflow_publishes_github_release_and_package
+  test_auto_tag_workflow_creates_and_publishes_missing_version_tags
   echo "smoke tests passed"
 }
 

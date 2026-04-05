@@ -123,7 +123,7 @@ Release packaging is kept small on purpose:
 
 That writes a versioned tarball to `dist/`.
 
-Publishing is tag-driven:
+Publishing can still be triggered manually:
 
 ```bash
 git tag "v$(./scripts/version.sh current)"
@@ -131,6 +131,8 @@ git push origin "v$(./scripts/version.sh current)"
 ```
 
 That creates a GitHub Release with the tarball attached and publishes a matching package to GHCR.
+
+On normal merges to `main`, Accord now auto-tags the current version if that tag does not already exist, then runs the same release publishing flow.
 
 ## Development
 
