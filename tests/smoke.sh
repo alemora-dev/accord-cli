@@ -103,14 +103,16 @@ EOF
 EOF
 
   assert_text_contains "$(accord::shared_research_prompt "$ROOT" "Prompt topic" "prompt-topic")" "reuse without re-reading the sources"
-  assert_text_contains "$(accord::shared_research_prompt "$ROOT" "Prompt topic" "prompt-topic")" "short source list"
-  assert_text_contains "$(accord::provider_understanding_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file")" "main tension"
+  assert_text_contains "$(accord::shared_research_prompt "$ROOT" "Prompt topic" "prompt-topic")" "one short lead line, then 4 to 6 bullets"
+  assert_text_contains "$(accord::shared_research_prompt "$ROOT" "Prompt topic" "prompt-topic")" "Sources list in plain markdown bullets"
+  assert_text_contains "$(accord::provider_understanding_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file")" "3 bullets max"
   assert_text_contains "$(accord::provider_understanding_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file")" "say when the research is thin"
   assert_text_contains "$(accord::provider_opinion_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file")" "start with the answer or recommendation in one sentence"
-  assert_text_contains "$(accord::provider_opinion_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file")" "avoid repeating the shared research"
-  assert_text_contains "$(accord::provider_debate_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$opinion_file" "$debate_file")" "only changes the parts of your answer"
+  assert_text_contains "$(accord::provider_opinion_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file")" "exactly 3 bullets"
+  assert_text_contains "$(accord::provider_debate_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$opinion_file" "$debate_file")" "2 to 4 bullets only"
   assert_text_contains "$(accord::provider_debate_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$opinion_file" "$debate_file")" "if nothing changes, say that plainly"
-  assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "one or two sentences"
+  assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "best final answer in one sentence"
+  assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "exactly 3 bullets for agreement, caveat, and next action"
   assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "do not repeat them line by line"
 }
 

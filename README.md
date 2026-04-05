@@ -4,6 +4,8 @@ Accord is a small bash orchestrator for local multi-agent debate runs.
 
 The coordinator, `codex` by default, does one shared web-research pass, writes a single research markdown file, then fans the same topic out to the available provider CLIs. Each provider writes an understanding note, an opinion, and one debate revision after reading peer opinions. The coordinator then writes the final synthesis.
 
+The prompt set is tuned for short, bullet-first artifacts so each file is easier to scan without turning the workflow into a rigid schema.
+
 ## Usage
 
 Run the repo-local entrypoint:

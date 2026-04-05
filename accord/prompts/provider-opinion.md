@@ -6,7 +6,7 @@ Using the topic, the shared research, and your own understanding, write your ini
 
 Requirements:
 - start with the answer or recommendation in one sentence
-- explain the reasoning in a few bullets, including the main tradeoff or caveat
-- mention any assumption you are making if the research is incomplete
+- follow that sentence with exactly 3 bullets
+- use those bullets for why, the main tradeoff or caveat, and any assumption if the research is incomplete
 - keep it brief and avoid repeating the shared research
 - no code fences
