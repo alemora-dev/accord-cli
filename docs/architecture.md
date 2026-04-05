@@ -19,17 +19,22 @@ There is no session model, build step, or internal TypeScript domain layer anymo
    - `.accordrc` via `ACCORD_LLMS=...`
    - legacy `--coordinator` and `--providers`
    - built-in defaults
-3. Detect which requested CLIs are available.
-4. Pick the coordinator:
+3. Resolve configured provider names from `.accordrc`:
+   - `ACCORD_PROVIDERS`
+   - `ACCORD_PROVIDER_<NAME>_STYLE`
+   - `ACCORD_PROVIDER_<NAME>_BIN`
+   - or the default provider set when no config is present
+4. Detect which requested provider commands are available.
+5. Pick the coordinator:
    - use the configured coordinator if available
    - otherwise fall back to the first available provider in the requested order
-5. Resolve the active debater list from the configured debaters that are available.
-6. Create `runs/<timestamp>-<topic-slug>/`.
-7. Run shared research once through the coordinator and write `<topic>_research_1.md`.
-8. Run provider understanding files for each active debater.
-9. Run provider opinion files for each debater that completed understanding.
-10. Run one debate revision per debater after reading peer opinions.
-11. Run final synthesis through the coordinator and write `<topic>_final_1.md`.
+6. Resolve the active debater list from the configured debaters that are available.
+7. Create `runs/<timestamp>-<topic-slug>/`.
+8. Run shared research once through the coordinator and write `<topic>_research_1.md`.
+9. Run provider understanding files for each active debater.
+10. Run provider opinion files for each debater that completed understanding.
+11. Run one debate revision per debater after reading peer opinions.
+12. Run final synthesis through the coordinator and write `<topic>_final_1.md`.
 
 If a provider fails during a provider stage, Accord logs it and continues with the remaining providers.
 
@@ -44,6 +49,7 @@ Rules:
 - exactly one coordinator must be configured
 - at least one debater must be configured
 - supported roles are `coordinator` and `debater`
+- provider names come from config, not from a hardcoded name allowlist
 - provider order is preserved
 - if only the promoted fallback coordinator remains available, it may also act as the sole debater so the run still works
 
@@ -61,13 +67,13 @@ Each stage has a versioned markdown prompt file in [`accord/prompts/`](/Users/di
 
 This keeps the orchestration code small while leaving prompt behavior easy to edit.
 
-## CLI Invocation
+## Provider Styles
 
-The default non-interactive invocations are:
+Accord keeps only three built-in runner styles:
 
 - `codex --search exec ...` for shared research
 - `codex exec ...` for other Codex stages
 - `claude -p ...`
 - `gemini -p ...`
 
-You can override binary paths with `ACCORD_CODEX_BIN`, `ACCORD_CLAUDE_BIN`, and `ACCORD_GEMINI_BIN`.
+Provider names can be remapped in `.accordrc` to any of those styles with `ACCORD_PROVIDER_<NAME>_STYLE` and `ACCORD_PROVIDER_<NAME>_BIN`.

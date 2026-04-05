@@ -36,6 +36,20 @@ write_config_file() {
   printf 'ACCORD_LLMS=%s\n' "$llms" >"$path"
 }
 
+write_provider_alias_config() {
+  local path="$1"
+  local fake_bin="$2"
+
+  cat >"$path" <<EOF
+ACCORD_LLMS=writer:coordinator,critic:debater
+ACCORD_PROVIDERS=writer,critic
+ACCORD_PROVIDER_WRITER_STYLE=codex
+ACCORD_PROVIDER_WRITER_BIN=$fake_bin/codex
+ACCORD_PROVIDER_CRITIC_STYLE=gemini
+ACCORD_PROVIDER_CRITIC_BIN=$fake_bin/gemini
+EOF
+}
+
 make_fake_bin() {
   local destination="$1"
   shift
@@ -257,6 +271,33 @@ test_llms_flag_allows_coordinator_to_also_be_debater() {
   assert_file "$run_dir/read-code_final_1.md"
 }
 
+test_configured_provider_aliases_reuse_builtin_styles() {
+  local tmpdir fake_bin config_path output run_dir
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+  fake_bin="$tmpdir/fake-bin"
+  config_path="$tmpdir/.accordrc"
+  make_fake_bin "$fake_bin" codex gemini
+  write_provider_alias_config "$config_path" "$fake_bin"
+
+  output="$(
+    PATH="$fake_bin:$PATH" \
+      ACCORD_CONFIG_FILE="$config_path" \
+      ACCORD_FIXED_TIMESTAMP="2026-04-05T12-00-07Z" \
+      "$SCRIPT" --output "$tmpdir/runs" "Alias config example" 2>&1
+  )"
+
+  run_dir="$tmpdir/runs/2026-04-05T12-00-07Z-alias-config"
+
+  assert_text_contains "$output" "Coordinator: writer"
+  assert_text_contains "$output" "Debaters: critic"
+  assert_file "$run_dir/alias-config_research_1.md"
+  assert_file "$run_dir/alias-config_critic_understanding_1.md"
+  assert_file "$run_dir/alias-config_critic_opinion_1.md"
+  assert_file "$run_dir/alias-config_critic_debate_1.md"
+  assert_file "$run_dir/alias-config_final_1.md"
+  assert_missing "$run_dir/alias-config_writer_understanding_1.md"
+}
+
 test_long_prompt_is_compacted_into_safe_run_and_artifact_names() {
   local tmpdir fake_bin prompt run_dir run_name research_file research_name
   tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
@@ -293,6 +334,7 @@ main() {
   test_llms_flag_overrides_config_defaults
   test_invalid_llms_spec_fails_fast
   test_llms_flag_allows_coordinator_to_also_be_debater
+  test_configured_provider_aliases_reuse_builtin_styles
   test_long_prompt_is_compacted_into_safe_run_and_artifact_names
   echo "smoke tests passed"
 }

@@ -16,6 +16,7 @@ The smoke suite uses fake `codex`, `claude`, and `gemini` shims to verify:
 - topic slugging and file naming
 - `--llms` role parsing and ordering
 - `.accordrc` default loading
+- config-driven provider aliases
 - `--llms` precedence over `.accordrc`
 - provider auto-detection
 - missing-provider continuation
