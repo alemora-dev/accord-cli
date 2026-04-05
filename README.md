@@ -1,61 +1,68 @@
-# Accord CLI
+# Accord
 
-Accord is a local-first TypeScript CLI for structured multi-agent research debates. It coordinates local provider CLIs, runs an explicit `independent -> cross-review -> consensus` flow, and keeps the project shaped like a real extensible tool rather than a one-off orchestration script.
+Accord is a small bash orchestrator for local multi-agent debate runs.
 
-## What it does
+The coordinator, `codex` by default, does one shared web-research pass, writes a single research markdown file, then fans the same topic out to the available provider CLIs. Each provider writes an understanding note, an opinion, and one debate revision after reading peer opinions. The coordinator then writes the final synthesis.
 
-- Runs a guided CLI flow for launching a debate topic.
-- Supports built-in provider adapters for `codex`, `claude`, and `gemini`.
-- Persists sessions locally so runs can be resumed later.
-- Produces deterministic consensus summaries from provider findings.
-- Exports consensus results as Markdown.
+## Usage
 
-## Main commands
+Run the repo-local entrypoint:
 
-- `accord`
-  Starts the interactive debate session.
-- `accord setup`
-  Detects available local providers and offers to launch a session.
-- `accord resume <sessionId>`
-  Loads a saved session from disk and reports its status.
+```bash
+./bin/accord "Recent AI coding agents"
+```
 
-## Current architecture
+Optional flags:
 
-- `src/domain`
-  Core debate, round, and consensus models plus orchestration services.
-- `src/application`
-  Use-case boundaries such as running debates, setup, and resume flows.
-- `src/providers`
-  Abstract provider contracts, built-in adapters, and prompt builders.
-- `src/infrastructure`
-  Filesystem, process execution, config loading, export, and persistence.
-- `tests`
-  Unit, contract, and integration coverage.
+```bash
+./bin/accord --coordinator gemini --providers codex,gemini --output ./runs "Best browser automation workflows"
+```
 
-More detail lives in:
+To expose it as `accord` on your shell path:
 
-- `docs/architecture.md`
-- `docs/provider-authoring.md`
-- `docs/session-model.md`
-- `docs/testing.md`
+```bash
+ln -s "$PWD/bin/accord" /usr/local/bin/accord
+```
+
+## Expected local CLIs
+
+Accord looks for these commands by default:
+
+- `codex`
+- `claude`
+- `gemini`
+
+You can override the executable path for each one with:
+
+- `ACCORD_CODEX_BIN`
+- `ACCORD_CLAUDE_BIN`
+- `ACCORD_GEMINI_BIN`
+
+If a provider is missing, Accord reports it and continues with the ones that are available. If the default coordinator `codex` is missing, Accord falls back to the first available provider unless `--coordinator` explicitly requested something unavailable.
+
+## Run Layout
+
+Each run writes to `runs/<timestamp>-<topic-slug>/`.
+
+Artifacts follow this shape:
+
+- `<topic>_research_1.md`
+- `<topic>_<provider>_understanding_1.md`
+- `<topic>_<provider>_opinion_1.md`
+- `<topic>_<provider>_debate_1.md`
+- `<topic>_final_1.md`
+
+Prompt assets and shell helpers live under [`accord/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord).
 
 ## Development
 
+Smoke tests:
+
 ```bash
-npm install
-npm run dev
-npm test
-npm run lint
-npm run build
+bash tests/smoke.sh
 ```
 
-## Status
+Core docs:
 
-This version is a strong scaffold for the full product:
-
-- provider execution contracts are in place
-- orchestration is implemented with fake-backed tests
-- the guided shell and launch gate exist
-- the docs and export layer are present
-
-The next likely iteration is richer provider-output presentation and fuller setup/session UX.
+- [`docs/architecture.md`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/docs/architecture.md)
+- [`docs/testing.md`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/docs/testing.md)
