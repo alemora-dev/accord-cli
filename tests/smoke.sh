@@ -92,6 +92,34 @@ test_full_run_creates_expected_artifacts() {
   assert_contains "$run_dir/recent-ai_final_1.md" "Final synthesis"
 }
 
+test_run_summary_describes_roles_styles_and_artifacts() {
+  local tmpdir fake_bin run_dir summary_file
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+  fake_bin="$tmpdir/fake-bin"
+  make_fake_bin "$fake_bin" codex claude gemini
+
+  PATH="$fake_bin:$PATH" \
+    ACCORD_CODEX_BIN="$fake_bin/codex" \
+    ACCORD_CLAUDE_BIN="$fake_bin/claude" \
+    ACCORD_GEMINI_BIN="$fake_bin/gemini" \
+    ACCORD_FIXED_TIMESTAMP="2026-04-05T12-00-00Z" \
+    "$SCRIPT" --output "$tmpdir/runs" "Recent AI coding agents" >/dev/null
+
+  run_dir="$tmpdir/runs/2026-04-05T12-00-00Z-recent-ai"
+  summary_file="$run_dir/run_summary.md"
+
+  assert_file "$summary_file"
+  assert_contains "$summary_file" "Coordinator: codex"
+  assert_contains "$summary_file" "Debaters: claude, gemini"
+  assert_contains "$summary_file" "codex -> codex"
+  assert_contains "$summary_file" "claude -> claude"
+  assert_contains "$summary_file" "gemini -> gemini"
+  assert_contains "$summary_file" "recent-ai_research_1.md"
+  assert_contains "$summary_file" "recent-ai_final_1.md"
+  assert_contains "$summary_file" "Token estimate: unknown"
+  assert_contains "$summary_file" "Cost estimate: unknown"
+}
+
 test_missing_provider_continues_with_available_ones() {
   local tmpdir fake_bin output run_dir
   tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
@@ -327,6 +355,7 @@ test_long_prompt_is_compacted_into_safe_run_and_artifact_names() {
 
 main() {
   test_full_run_creates_expected_artifacts
+  test_run_summary_describes_roles_styles_and_artifacts
   test_missing_provider_continues_with_available_ones
   test_missing_default_coordinator_falls_back_to_available_provider
   test_llms_flag_assigns_roles_and_preserves_order

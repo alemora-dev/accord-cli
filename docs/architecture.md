@@ -35,6 +35,7 @@ There is no session model, build step, or internal TypeScript domain layer anymo
 10. Run provider opinion files for each debater that completed understanding.
 11. Run one debate revision per debater after reading peer opinions.
 12. Run final synthesis through the coordinator and write `<topic>_final_1.md`.
+13. Write `run_summary.md` with roles, provider styles, artifact names, and summary cost/token placeholders.
 
 If a provider fails during a provider stage, Accord logs it and continues with the remaining providers.
 

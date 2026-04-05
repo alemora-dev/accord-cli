@@ -13,6 +13,7 @@ bash tests/smoke.sh
 The smoke suite uses fake `codex`, `claude`, and `gemini` shims to verify:
 
 - run directory creation
+- run summary artifact generation
 - topic slugging and file naming
 - `--llms` role parsing and ordering
 - `.accordrc` default loading
@@ -39,3 +40,4 @@ Check that:
 - the coordinator and debaters match `--llms` or `.accordrc`
 - each active debater writes understanding, opinion, and debate files
 - the coordinator writes the final synthesis file
+- `run_summary.md` lists the run roles and generated artifacts
