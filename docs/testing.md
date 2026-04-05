@@ -14,9 +14,13 @@ The smoke suite uses fake `codex`, `claude`, and `gemini` shims to verify:
 
 - run directory creation
 - topic slugging and file naming
+- `--llms` role parsing and ordering
+- `.accordrc` default loading
+- `--llms` precedence over `.accordrc`
 - provider auto-detection
 - missing-provider continuation
 - coordinator fallback when `codex` is unavailable
+- invalid role validation
 - staged artifact generation through final synthesis
 
 ## Manual verification
@@ -31,5 +35,6 @@ Check that:
 
 - a new folder appears under `runs/`
 - shared research is written once
-- each available provider writes understanding, opinion, and debate files
+- the coordinator and debaters match `--llms` or `.accordrc`
+- each active debater writes understanding, opinion, and debate files
 - the coordinator writes the final synthesis file
