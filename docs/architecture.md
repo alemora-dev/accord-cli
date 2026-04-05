@@ -13,19 +13,39 @@ There is no session model, build step, or internal TypeScript domain layer anymo
 
 ## Pipeline
 
-1. Parse `--coordinator`, `--providers`, and `--output`, then require a prompt.
-2. Detect which requested CLIs are available.
-3. Pick the coordinator:
-   - use the requested or default coordinator if available
-   - otherwise fall back to the first available provider when the coordinator was not explicitly chosen
-4. Create `runs/<timestamp>-<topic-slug>/`.
-5. Run shared research once through the coordinator and write `<topic>_research_1.md`.
-6. Run provider understanding files for each available provider.
-7. Run provider opinion files for each provider that completed understanding.
-8. Run one debate revision per provider after reading peer opinions.
-9. Run final synthesis through the coordinator and write `<topic>_final_1.md`.
+1. Parse `--llms`, legacy role flags, and `--output`, then require a prompt.
+2. Resolve role configuration in this order:
+   - `--llms`
+   - `.accordrc` via `ACCORD_LLMS=...`
+   - legacy `--coordinator` and `--providers`
+   - built-in defaults
+3. Detect which requested CLIs are available.
+4. Pick the coordinator:
+   - use the configured coordinator if available
+   - otherwise fall back to the first available provider in the requested order
+5. Resolve the active debater list from the configured debaters that are available.
+6. Create `runs/<timestamp>-<topic-slug>/`.
+7. Run shared research once through the coordinator and write `<topic>_research_1.md`.
+8. Run provider understanding files for each active debater.
+9. Run provider opinion files for each debater that completed understanding.
+10. Run one debate revision per debater after reading peer opinions.
+11. Run final synthesis through the coordinator and write `<topic>_final_1.md`.
 
 If a provider fails during a provider stage, Accord logs it and continues with the remaining providers.
+
+## Role Configuration
+
+The preferred public syntax is:
+
+- `codex:coordinator,claude:debater,gemini:debater`
+
+Rules:
+
+- exactly one coordinator must be configured
+- at least one debater must be configured
+- supported roles are `coordinator` and `debater`
+- provider order is preserved
+- if only the promoted fallback coordinator remains available, it may also act as the sole debater so the run still works
 
 ## Prompt Strategy
 
