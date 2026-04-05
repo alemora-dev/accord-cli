@@ -115,3 +115,17 @@ accord::read_file() {
 accord::trim() {
   printf '%s' "$1" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//'
 }
+
+accord::prompt_mode() {
+  local prompt
+  prompt="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+
+  case "$prompt" in
+    *analysis*|*analyse*|*analyze*|*roadmap*|*compare*|*comparison*|*audit*|*gap*|*gaps*|*launch*|*"go live"*|*mvp*|*strategy*|*market*|*status*|*iterate*|*plan*|*planning*|*review*|*evaluate*|*readiness*)
+      printf 'detailed'
+      return
+      ;;
+  esac
+
+  printf 'compact'
+}

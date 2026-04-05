@@ -120,6 +120,49 @@ EOF
   assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "do not repeat them line by line"
 }
 
+test_prompt_mode_expands_for_analysis_heavy_requests() {
+  local tmpdir research_file understanding_file opinion_file debate_file
+  local complex_topic simple_topic
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+  research_file="$tmpdir/research.md"
+  understanding_file="$tmpdir/understanding.md"
+  opinion_file="$tmpdir/opinion.md"
+  debate_file="$tmpdir/debate.md"
+  simple_topic="What is the color of the sky?"
+  complex_topic="Compare the current status with the old analysis and give me a recent analysis, roadmap, launch gaps, MVP blockers, and next steps for Europe go-live."
+
+  cat >"$research_file" <<'EOF'
+# Research
+
+- Fact: something useful
+EOF
+  cat >"$understanding_file" <<'EOF'
+# Understanding
+
+- Fact: something useful
+EOF
+  cat >"$opinion_file" <<'EOF'
+# Opinion
+
+- Answer: something useful
+EOF
+  cat >"$debate_file" <<'EOF'
+# Debate
+
+- Revision: something useful
+EOF
+
+  assert_equals "compact" "$(accord::prompt_mode "$simple_topic")"
+  assert_equals "detailed" "$(accord::prompt_mode "$complex_topic")"
+  assert_text_contains "$(accord::shared_research_prompt "$ROOT" "$complex_topic" "complex-topic")" "## Summary"
+  assert_text_contains "$(accord::shared_research_prompt "$ROOT" "$complex_topic" "complex-topic")" "## Key Findings"
+  assert_text_contains "$(accord::provider_understanding_prompt "$ROOT" "$complex_topic" "complex-topic" "codex" "$research_file")" "## What Matters"
+  assert_text_contains "$(accord::provider_opinion_prompt "$ROOT" "$complex_topic" "complex-topic" "codex" "$research_file" "$understanding_file")" "## Recommendation"
+  assert_text_contains "$(accord::provider_debate_prompt "$ROOT" "$complex_topic" "complex-topic" "codex" "$research_file" "$opinion_file" "$debate_file")" "## What Changed"
+  assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "$complex_topic" "complex-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "## Bottom Line"
+  assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "$complex_topic" "complex-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "## Recommended Next Steps"
+}
+
 test_version_flag_prints_version_and_help_mentions_it() {
   local version_output help_output
 
@@ -519,12 +562,22 @@ test_package_script_creates_a_versioned_archive() {
   tar -tzf "$archive" | grep -Fq "accord-0.1.0/docs/architecture.md" || fail "expected docs in archive"
 }
 
+test_ci_workflow_builds_and_uploads_release_archive() {
+  local workflow="$ROOT/.github/workflows/ci.yml"
+
+  assert_contains "$workflow" "Run release packaging"
+  assert_contains "$workflow" "bash scripts/package.sh"
+  assert_contains "$workflow" "actions/upload-artifact@v4"
+  assert_contains "$workflow" "dist/accord-*.tar.gz"
+}
+
 main() {
   # shellcheck source=../accord/lib/common.sh
   . "$ROOT/accord/lib/common.sh"
   # shellcheck source=../accord/lib/prompts.sh
   . "$ROOT/accord/lib/prompts.sh"
   test_prompt_templates_encode_the_expected_guidance
+  test_prompt_mode_expands_for_analysis_heavy_requests
   test_full_run_creates_expected_artifacts
   test_run_summary_describes_roles_styles_and_artifacts
   test_missing_provider_continues_with_available_ones
@@ -541,6 +594,7 @@ main() {
   test_long_prompt_is_compacted_into_safe_run_and_artifact_names
   test_version_flag_prints_version_and_help_mentions_it
   test_package_script_creates_a_versioned_archive
+  test_ci_workflow_builds_and_uploads_release_archive
   echo "smoke tests passed"
 }
 
