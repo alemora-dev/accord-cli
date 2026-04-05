@@ -115,13 +115,9 @@ accord::parse_llms_spec() {
     [ -n "$role" ] || accord::fail "Malformed --llms entry: $entry"
     accord::provider_supported "$provider" || accord::fail "Unsupported provider in --llms: $provider"
 
-    if [ "${#requested[@]}" -gt 0 ]; then
-      for existing in "${requested[@]}"; do
-        [ "$existing" != "$provider" ] || accord::fail "Provider $provider is listed more than once."
-      done
+    if [ "${#requested[@]}" -eq 0 ] || ! accord::list_contains "$provider" "${requested[@]}"; then
+      requested+=("$provider")
     fi
-
-    requested+=("$provider")
 
     case "$role" in
       coordinator)
@@ -129,6 +125,9 @@ accord::parse_llms_spec() {
         coordinator="$provider"
         ;;
       debater)
+        if [ "${#debaters[@]}" -gt 0 ] && accord::list_contains "$provider" "${debaters[@]}"; then
+          accord::fail "Provider $provider is listed as a debater more than once."
+        fi
         debaters+=("$provider")
         ;;
       *)
@@ -169,7 +168,7 @@ accord::resolve_llm_roles() {
   coordinator="$(accord::pick_coordinator "$ACCORD_CONFIGURED_COORDINATOR" "0" "${available[@]}")"
 
   for provider in "${debaters[@]}"; do
-    if accord::list_contains "$provider" "${available[@]}" && [ "$provider" != "$coordinator" ]; then
+    if accord::list_contains "$provider" "${available[@]}"; then
       active+=("$provider")
     fi
   done
@@ -410,7 +409,7 @@ accord::main() {
   fi
 
   timestamp="$(accord::timestamp)"
-  slug="$(accord::slugify "$prompt")"
+  slug="$(accord::topic_slug "$prompt")"
   [ -n "$slug" ] || slug="topic"
 
   run_dir="$output_root/$timestamp-$slug"

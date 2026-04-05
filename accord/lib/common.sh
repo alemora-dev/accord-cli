@@ -30,6 +30,27 @@ accord::slugify() {
     | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g'
 }
 
+accord::topic_slug() {
+  local raw_slug first second
+  raw_slug="$(accord::slugify "$1")"
+
+  [ -n "$raw_slug" ] || {
+    printf 'topic'
+    return
+  }
+
+  first="${raw_slug%%-*}"
+
+  if [ "$first" = "$raw_slug" ]; then
+    printf '%s' "$first"
+    return
+  fi
+
+  second="${raw_slug#*-}"
+  second="${second%%-*}"
+  printf '%s-%s' "$first" "$second"
+}
+
 accord::timestamp() {
   if [ -n "${ACCORD_FIXED_TIMESTAMP:-}" ]; then
     printf '%s' "$ACCORD_FIXED_TIMESTAMP"
