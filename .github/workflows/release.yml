@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify release tag matches VERSION
+        shell: bash
+        run: |
+          version="$(cat VERSION)"
+          tag="${GITHUB_REF_NAME}"
+
+          if [ "$tag" != "v$version" ]; then
+            echo "Tag $tag does not match VERSION $version" >&2
+            exit 1
+          fi
+
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Verify shell syntax
+        run: bash -n bin/accord accord/lib/common.sh accord/lib/pipeline.sh accord/lib/prompts.sh accord/lib/providers.sh tests/smoke.sh
+
+      - name: Run smoke suite
+        run: bash tests/smoke.sh
+
+      - name: Build release archive
+        run: bash scripts/package.sh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/accord-*.tar.gz
+          generate_release_notes: true
+
+      - name: Install ORAS
+        uses: oras-project/setup-oras@v1
+
+      - name: Log in to GHCR
+        shell: bash
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Publish package to GHCR
+        shell: bash
+        run: |
+          owner="$(printf '%s' "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          image="ghcr.io/$owner/accord-cli"
+          archive="dist/accord-${VERSION}.tar.gz"
+
+          oras push "$image:v${VERSION}" \
+            "$archive:application/vnd.accord.release.v1+tar+gzip"
+

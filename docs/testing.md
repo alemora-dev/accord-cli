@@ -16,6 +16,8 @@ The smoke suite uses fake `codex`, `claude`, and `gemini` shims to verify:
 - run summary artifact generation
 - `--version` output and `--help` mention of the flag
 - release package creation
+- CI artifact upload wiring
+- release workflow wiring for GitHub Releases and GHCR publishing
 - topic slugging and file naming
 - `--llms` role parsing and ordering
 - `.accordrc` default loading
