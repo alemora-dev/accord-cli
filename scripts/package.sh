@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="$(cat "$ROOT/VERSION")"
+VERSION="$("$ROOT/scripts/version.sh" current)"
 DIST_DIR="${ACCORD_DIST_DIR:-$ROOT/dist}"
 STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/accord-package.XXXXXX")"
 PACKAGE_ROOT="$STAGING_DIR/accord-$VERSION"

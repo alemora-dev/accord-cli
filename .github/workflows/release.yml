@@ -20,7 +20,7 @@ jobs:
       - name: Verify release tag matches VERSION
         shell: bash
         run: |
-          version="$(cat VERSION)"
+          version="$(bash scripts/version.sh current)"
           tag="${GITHUB_REF_NAME}"
 
           if [ "$tag" != "v$version" ]; then
@@ -61,4 +61,3 @@ jobs:
 
           oras push "$image:v${VERSION}" \
             "$archive:application/vnd.accord.release.v1+tar+gzip"
-
