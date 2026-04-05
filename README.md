@@ -92,8 +92,11 @@ Artifacts follow this shape:
 - `<topic>_<provider>_opinion_1.md`
 - `<topic>_<provider>_debate_1.md`
 - `<topic>_final_1.md`
+- `run_summary.md`
 
 With the default `.accordrc`, `codex` coordinates and `claude` plus `gemini` produce the debater artifacts.
+
+`run_summary.md` is a small transparency file with the coordinator, debaters, provider styles, artifact list, and placeholder token/cost fields.
 
 Prompt assets and shell helpers live under [`accord/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord).
 

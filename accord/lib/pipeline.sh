@@ -8,6 +8,47 @@ accord::artifact_path() {
   printf '%s/%s_%s.md' "$run_dir" "$slug" "$suffix"
 }
 
+accord::run_summary_path() {
+  printf '%s/run_summary.md' "$1"
+}
+
+accord::write_run_summary() {
+  local run_dir="$1"
+  local coordinator="$2"
+  local debaters_csv="$3"
+  local provider_lines="$4"
+  local artifact_lines="$5"
+  local summary_file
+  local provider
+  local style
+  local artifact
+
+  summary_file="$(accord::run_summary_path "$run_dir")"
+
+  {
+    printf '# Run summary\n\n'
+    printf -- '- Coordinator: %s\n' "$coordinator"
+    printf -- '- Debaters: %s\n' "$debaters_csv"
+    printf -- '- Token estimate: unknown\n'
+    printf -- '- Cost estimate: unknown\n\n'
+    printf '## Provider styles\n\n'
+    while IFS= read -r provider; do
+      [ -n "$provider" ] || continue
+      style="$(accord::provider_style "$provider")"
+      printf -- '- %s -> %s\n' "$provider" "$style"
+    done <<EOF
+$provider_lines
+EOF
+    printf '\n## Artifacts\n\n'
+    while IFS= read -r artifact; do
+      [ -n "$artifact" ] || continue
+      printf -- '- %s\n' "$(basename "$artifact")"
+    done <<EOF
+$artifact_lines
+EOF
+  } >"$summary_file"
+}
+
 accord::collect_peer_opinion_files() {
   local run_dir="$1"
   local slug="$2"
@@ -298,6 +339,8 @@ accord::main() {
   local timestamp=""
   local provider=""
   local artifact_files=()
+  local provider_lines=""
+  local artifact_lines=""
 
   root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
   accord::load_runtime_config "$root"
@@ -453,6 +496,22 @@ accord::main() {
     "$run_dir"; then
     accord::fail "Coordinator $coordinator failed during final synthesis."
   fi
+
+  artifact_files+=("$final_file")
+  provider_lines="$coordinator"
+  for provider in "${active[@]}"; do
+    if [ "$provider" != "$coordinator" ]; then
+      provider_lines="$provider_lines
+$provider"
+    fi
+  done
+  artifact_lines="$(printf '%s\n' "${artifact_files[@]}")"
+  accord::write_run_summary \
+    "$run_dir" \
+    "$coordinator" \
+    "$(accord::join_by ', ' "${active[@]}")" \
+    "$provider_lines" \
+    "$artifact_lines"
 
   printf '%s\n' "$run_dir"
 }
