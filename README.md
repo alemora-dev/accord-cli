@@ -116,6 +116,15 @@ Release packaging is kept small on purpose:
 
 That writes a versioned tarball to `dist/`.
 
+Publishing is tag-driven:
+
+```bash
+git tag "v$(cat VERSION)"
+git push origin "v$(cat VERSION)"
+```
+
+That creates a GitHub Release with the tarball attached and publishes a matching package to GHCR.
+
 ## Development
 
 Smoke tests:

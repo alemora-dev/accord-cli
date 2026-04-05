@@ -571,6 +571,24 @@ test_ci_workflow_builds_and_uploads_release_archive() {
   assert_contains "$workflow" "dist/accord-*.tar.gz"
 }
 
+test_release_workflow_publishes_github_release_and_package() {
+  local workflow="$ROOT/.github/workflows/release.yml"
+
+  assert_file "$workflow"
+  assert_contains "$workflow" "push:"
+  assert_contains "$workflow" "tags:"
+  assert_contains "$workflow" "v*"
+  assert_contains "$workflow" "contents: write"
+  assert_contains "$workflow" "packages: write"
+  assert_contains "$workflow" "bash scripts/package.sh"
+  assert_contains "$workflow" "softprops/action-gh-release@v2"
+  assert_contains "$workflow" "dist/accord-*.tar.gz"
+  assert_contains "$workflow" "oras-project/setup-oras@v1"
+  assert_contains "$workflow" "ghcr.io/"
+  assert_contains "$workflow" "oras push"
+  assert_contains "$workflow" "cat VERSION"
+}
+
 main() {
   # shellcheck source=../accord/lib/common.sh
   . "$ROOT/accord/lib/common.sh"
@@ -595,6 +613,7 @@ main() {
   test_version_flag_prints_version_and_help_mentions_it
   test_package_script_creates_a_versioned_archive
   test_ci_workflow_builds_and_uploads_release_archive
+  test_release_workflow_publishes_github_release_and_package
   echo "smoke tests passed"
 }
 

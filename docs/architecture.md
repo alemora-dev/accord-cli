@@ -9,6 +9,7 @@ Accord is intentionally small:
 - [`accord/prompts/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord/prompts) contains the stage-specific prompt assets
 - [`VERSION`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/VERSION) is the single source of truth for release versioning
 - [`scripts/package.sh`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/scripts/package.sh) creates a small release archive in `dist/`
+- [`.github/workflows/release.yml`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/.github/workflows/release.yml) publishes tagged releases to GitHub Releases and GHCR
 - `runs/` stores generated markdown artifacts for each execution
 
 There is no session model, build step, or internal TypeScript domain layer anymore. The behavior is the shell pipeline.
@@ -39,6 +40,13 @@ There is no session model, build step, or internal TypeScript domain layer anymo
 12. Run final synthesis through the coordinator and write `<topic>_final_1.md`.
 13. Write `run_summary.md` with roles, provider styles, artifact names, and summary cost/token placeholders.
 14. Read `VERSION` for `--version` output and package naming.
+
+## Release Flow
+
+- CI on pull requests and pushes to `main` builds the tarball and uploads it as a workflow artifact.
+- Tagging `v<version>` triggers the release workflow.
+- The release workflow verifies that the tag matches `VERSION`.
+- It then rebuilds the tarball, creates a GitHub Release, and publishes the same archive to GHCR as an OCI package.
 
 If a provider fails during a provider stage, Accord logs it and continues with the remaining providers.
 
