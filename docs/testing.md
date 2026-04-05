@@ -14,6 +14,8 @@ The smoke suite uses fake `codex`, `claude`, and `gemini` shims to verify:
 
 - run directory creation
 - run summary artifact generation
+- `--version` output and `--help` mention of the flag
+- release package creation
 - topic slugging and file naming
 - `--llms` role parsing and ordering
 - `.accordrc` default loading

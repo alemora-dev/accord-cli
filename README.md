@@ -12,6 +12,12 @@ Run the repo-local entrypoint:
 ./bin/accord "Recent AI coding agents"
 ```
 
+Print the current release version:
+
+```bash
+./bin/accord --version
+```
+
 Primary role-order configuration:
 
 ```bash
@@ -99,6 +105,14 @@ With the default `.accordrc`, `codex` coordinates and `claude` plus `gemini` pro
 `run_summary.md` is a small transparency file with the coordinator, debaters, provider styles, artifact list, and placeholder token/cost fields.
 
 Prompt assets and shell helpers live under [`accord/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord).
+
+Release packaging is kept small on purpose:
+
+```bash
+./scripts/package.sh
+```
+
+That writes a versioned tarball to `dist/`.
 
 ## Development
 

@@ -1,18 +1,34 @@
 #!/usr/bin/env bash
 
 accord::usage() {
-  cat <<'EOF'
-Usage: accord [--llms <role-list>] [--coordinator <provider>] [--providers <csv>] [--output <dir>] "prompt"
+  cat <<EOF
+Usage: accord [--version] [--llms <role-list>] [--coordinator <provider>] [--providers <csv>] [--output <dir>] "prompt"
 
 Default providers: codex,claude,gemini
 Default coordinator: codex
+Version: $(accord::version)
 
 Examples:
   accord "Recent AI coding agents"
+  accord --version
   accord --llms codex:coordinator,claude:debater,gemini:debater "State of local-first coding tools"
   accord --providers codex,gemini "State of local-first coding tools"
   accord --coordinator gemini --output ./runs "Best browser automation workflows"
 EOF
+}
+
+accord::version() {
+  if [ -n "${ACCORD_VERSION:-}" ]; then
+    printf '%s' "$ACCORD_VERSION"
+    return
+  fi
+
+  if [ -n "${ACCORD_ROOT:-}" ] && [ -f "$ACCORD_ROOT/VERSION" ]; then
+    cat "$ACCORD_ROOT/VERSION"
+    return
+  fi
+
+  printf 'unknown'
 }
 
 accord::log() {

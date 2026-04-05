@@ -20,13 +20,19 @@ assert_missing() {
 assert_contains() {
   local path="$1"
   local needle="$2"
-  grep -Fq "$needle" "$path" || fail "expected '$needle' in $path"
+  grep -Fq -- "$needle" "$path" || fail "expected '$needle' in $path"
 }
 
 assert_text_contains() {
   local text="$1"
   local needle="$2"
-  printf '%s' "$text" | grep -Fq "$needle" || fail "expected output to contain '$needle'"
+  printf '%s' "$text" | grep -Fq -- "$needle" || fail "expected output to contain '$needle'"
+}
+
+assert_equals() {
+  local expected="$1"
+  local actual="$2"
+  [ "$expected" = "$actual" ] || fail "expected '$expected', got '$actual'"
 }
 
 write_config_file() {
@@ -106,6 +112,16 @@ EOF
   assert_text_contains "$(accord::provider_debate_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$opinion_file" "$debate_file")" "if nothing changes, say that plainly"
   assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "one or two sentences"
   assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "do not repeat them line by line"
+}
+
+test_version_flag_prints_version_and_help_mentions_it() {
+  local version_output help_output
+
+  version_output="$("$SCRIPT" --version)"
+  help_output="$("$SCRIPT" --help)"
+
+  assert_equals "0.1.0" "$version_output"
+  assert_text_contains "$help_output" "--version"
 }
 
 test_full_run_creates_expected_artifacts() {
@@ -400,6 +416,25 @@ test_long_prompt_is_compacted_into_safe_run_and_artifact_names() {
   [ "$research_name" = "read-code_research_1.md" ] || fail "expected two-word artifact name, got $research_name"
 }
 
+test_package_script_creates_a_versioned_archive() {
+  local tmpdir archive output
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+
+  output="$(
+    ACCORD_DIST_DIR="$tmpdir/dist" \
+      "$ROOT/scripts/package.sh" 2>&1
+  )"
+
+  archive="$tmpdir/dist/accord-0.1.0.tar.gz"
+
+  assert_file "$archive"
+  assert_text_contains "$output" "$archive"
+  tar -tzf "$archive" | grep -Fq "accord-0.1.0/VERSION" || fail "expected VERSION in archive"
+  tar -tzf "$archive" | grep -Fq "accord-0.1.0/bin/accord" || fail "expected bin/accord in archive"
+  tar -tzf "$archive" | grep -Fq "accord-0.1.0/README.md" || fail "expected README.md in archive"
+  tar -tzf "$archive" | grep -Fq "accord-0.1.0/docs/architecture.md" || fail "expected docs in archive"
+}
+
 main() {
   # shellcheck source=../accord/lib/common.sh
   . "$ROOT/accord/lib/common.sh"
@@ -417,6 +452,8 @@ main() {
   test_llms_flag_allows_coordinator_to_also_be_debater
   test_configured_provider_aliases_reuse_builtin_styles
   test_long_prompt_is_compacted_into_safe_run_and_artifact_names
+  test_version_flag_prints_version_and_help_mentions_it
+  test_package_script_creates_a_versioned_archive
   echo "smoke tests passed"
 }
 

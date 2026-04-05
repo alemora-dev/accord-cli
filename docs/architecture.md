@@ -7,6 +7,8 @@ Accord is intentionally small:
 - [`bin/accord`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/bin/accord) is the entrypoint
 - [`accord/lib/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord/lib) contains the shell helpers
 - [`accord/prompts/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord/prompts) contains the stage-specific prompt assets
+- [`VERSION`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/VERSION) is the single source of truth for release versioning
+- [`scripts/package.sh`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/scripts/package.sh) creates a small release archive in `dist/`
 - `runs/` stores generated markdown artifacts for each execution
 
 There is no session model, build step, or internal TypeScript domain layer anymore. The behavior is the shell pipeline.
@@ -36,6 +38,7 @@ There is no session model, build step, or internal TypeScript domain layer anymo
 11. Run one debate revision per debater after reading peer opinions.
 12. Run final synthesis through the coordinator and write `<topic>_final_1.md`.
 13. Write `run_summary.md` with roles, provider styles, artifact names, and summary cost/token placeholders.
+14. Read `VERSION` for `--version` output and package naming.
 
 If a provider fails during a provider stage, Accord logs it and continues with the remaining providers.
 
