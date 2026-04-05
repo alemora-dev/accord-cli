@@ -2,13 +2,14 @@
 
 accord::usage() {
   cat <<'EOF'
-Usage: accord [--coordinator <provider>] [--providers <csv>] [--output <dir>] "prompt"
+Usage: accord [--llms <role-list>] [--coordinator <provider>] [--providers <csv>] [--output <dir>] "prompt"
 
 Default providers: codex,claude,gemini
 Default coordinator: codex
 
 Examples:
   accord "Recent AI coding agents"
+  accord --llms codex:coordinator,claude:debater,gemini:debater "State of local-first coding tools"
   accord --providers codex,gemini "State of local-first coding tools"
   accord --coordinator gemini --output ./runs "Best browser automation workflows"
 EOF
@@ -60,4 +61,8 @@ accord::read_file() {
   if [ -f "$path" ]; then
     cat "$path"
   fi
+}
+
+accord::trim() {
+  printf '%s' "$1" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//'
 }

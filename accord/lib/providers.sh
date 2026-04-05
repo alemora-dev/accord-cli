@@ -22,6 +22,13 @@ accord::provider_command() {
   printf '%s' "$provider"
 }
 
+accord::provider_supported() {
+  case "$1" in
+    codex|claude|gemini) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 accord::provider_available() {
   local command_name
   command_name="$(accord::provider_command "$1")"
