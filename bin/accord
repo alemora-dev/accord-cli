@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export ACCORD_ROOT="$ROOT"
 
 # shellcheck source=../accord/lib/common.sh
 . "$ROOT/accord/lib/common.sh"

@@ -370,6 +370,11 @@ accord::main() {
         output_root="$2"
         shift 2
         ;;
+      --version)
+        accord::version
+        printf '\n'
+        exit 0
+        ;;
       -h|--help)
         accord::usage
         exit 0
