@@ -17,6 +17,10 @@ assert_missing() {
   [ ! -e "$1" ] || fail "did not expect $1"
 }
 
+assert_empty_or_missing() {
+  [ ! -e "$1" ] || [ ! -s "$1" ] || fail "expected $1 to be empty or missing"
+}
+
 assert_contains() {
   local path="$1"
   local needle="$2"
@@ -364,6 +368,84 @@ test_llms_flag_allows_coordinator_to_also_be_debater() {
   assert_file "$run_dir/read-code_final_1.md"
 }
 
+test_understanding_stage_runs_providers_in_parallel() {
+  local tmpdir fake_bin output run_dir
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+  fake_bin="$tmpdir/fake-bin"
+  make_fake_bin "$fake_bin" codex claude gemini
+
+  output="$(
+    PATH="$fake_bin:$PATH" \
+      ACCORD_CODEX_BIN="$fake_bin/codex" \
+      ACCORD_CLAUDE_BIN="$fake_bin/claude" \
+      ACCORD_GEMINI_BIN="$fake_bin/gemini" \
+      ACCORD_FIXED_TIMESTAMP="2026-04-05T12-00-08Z" \
+      FAKE_SYNC_STAGE="provider_understanding" \
+      FAKE_SYNC_DIR="$tmpdir/sync" \
+      FAKE_SYNC_PROVIDERS="claude,gemini" \
+      FAKE_SYNC_TIMEOUT_STEPS="20" \
+      "$SCRIPT" --output "$tmpdir/runs" --llms "codex:coordinator,claude:debater,gemini:debater" "Parallel understanding" 2>&1
+  )"
+
+  run_dir="$tmpdir/runs/2026-04-05T12-00-08Z-parallel-understanding"
+
+  assert_text_contains "$output" "Debaters: claude, gemini"
+  assert_file "$run_dir/parallel-understanding_claude_understanding_1.md"
+  assert_file "$run_dir/parallel-understanding_gemini_understanding_1.md"
+  assert_file "$run_dir/parallel-understanding_claude_opinion_1.md"
+  assert_file "$run_dir/parallel-understanding_gemini_opinion_1.md"
+}
+
+test_stage_failure_drops_failed_provider_and_keeps_survivors() {
+  local tmpdir fake_bin output run_dir
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+  fake_bin="$tmpdir/fake-bin"
+  make_fake_bin "$fake_bin" codex claude gemini
+
+  output="$(
+    PATH="$fake_bin:$PATH" \
+      ACCORD_CODEX_BIN="$fake_bin/codex" \
+      ACCORD_CLAUDE_BIN="$fake_bin/claude" \
+      ACCORD_GEMINI_BIN="$fake_bin/gemini" \
+      ACCORD_FIXED_TIMESTAMP="2026-04-05T12-00-09Z" \
+      FAKE_FAIL_PROVIDER="claude" \
+      FAKE_FAIL_STAGE="provider_opinion" \
+      "$SCRIPT" --output "$tmpdir/runs" --llms "codex:coordinator,claude:debater,gemini:debater" "Opinion failure example" 2>&1
+  )"
+
+  run_dir="$tmpdir/runs/2026-04-05T12-00-09Z-opinion-failure"
+
+  assert_text_contains "$output" "Provider claude failed during opinion; continuing"
+  assert_file "$run_dir/opinion-failure_gemini_opinion_1.md"
+  assert_empty_or_missing "$run_dir/opinion-failure_claude_opinion_1.md"
+  assert_file "$run_dir/opinion-failure_gemini_debate_1.md"
+  assert_missing "$run_dir/opinion-failure_claude_debate_1.md"
+  assert_file "$run_dir/opinion-failure_final_1.md"
+}
+
+test_stage_fails_when_all_active_providers_fail() {
+  local tmpdir fake_bin output status
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+  fake_bin="$tmpdir/fake-bin"
+  make_fake_bin "$fake_bin" codex claude
+
+  set +e
+  output="$(
+    PATH="$fake_bin:$PATH" \
+      ACCORD_CODEX_BIN="$fake_bin/codex" \
+      ACCORD_CLAUDE_BIN="$fake_bin/claude" \
+      ACCORD_FIXED_TIMESTAMP="2026-04-05T12-00-10Z" \
+      FAKE_FAIL_PROVIDER="claude" \
+      FAKE_FAIL_STAGE="provider_understanding" \
+      "$SCRIPT" --output "$tmpdir/runs" --llms "codex:coordinator,claude:debater" "All fail example" 2>&1
+  )"
+  status=$?
+  set -e
+
+  [ "$status" -ne 0 ] || fail "expected run to fail when every active provider fails"
+  assert_text_contains "$output" "No providers completed the understanding stage."
+}
+
 test_configured_provider_aliases_reuse_builtin_styles() {
   local tmpdir fake_bin config_path output run_dir
   tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
@@ -452,6 +534,9 @@ main() {
   test_llms_flag_overrides_config_defaults
   test_invalid_llms_spec_fails_fast
   test_llms_flag_allows_coordinator_to_also_be_debater
+  test_understanding_stage_runs_providers_in_parallel
+  test_stage_failure_drops_failed_provider_and_keeps_survivors
+  test_stage_fails_when_all_active_providers_fail
   test_configured_provider_aliases_reuse_builtin_styles
   test_long_prompt_is_compacted_into_safe_run_and_artifact_names
   test_version_flag_prints_version_and_help_mentions_it

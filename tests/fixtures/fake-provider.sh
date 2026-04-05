@@ -43,6 +43,40 @@ if [ "${FAKE_FAIL_PROVIDER:-}" = "$provider" ] && [ "${FAKE_FAIL_STAGE:-}" = "$s
   exit 1
 fi
 
+if [ -n "${FAKE_SYNC_STAGE:-}" ] && [ "$stage" = "$FAKE_SYNC_STAGE" ]; then
+  case ",${FAKE_SYNC_PROVIDERS:-}," in
+    *",$provider,"*)
+      mkdir -p "${FAKE_SYNC_DIR:?}"
+      touch "$FAKE_SYNC_DIR/$stage.$provider.started"
+      timeout_steps="${FAKE_SYNC_TIMEOUT_STEPS:-20}"
+      step=0
+
+      while [ "$step" -lt "$timeout_steps" ]; do
+        ready=1
+        IFS=',' read -r -a sync_providers <<<"${FAKE_SYNC_PROVIDERS:-}"
+        for sync_provider in "${sync_providers[@]}"; do
+          if [ ! -f "$FAKE_SYNC_DIR/$stage.$sync_provider.started" ]; then
+            ready=0
+            break
+          fi
+        done
+
+        if [ "$ready" -eq 1 ]; then
+          break
+        fi
+
+        sleep 0.1
+        step=$((step + 1))
+      done
+
+      if [ "$ready" -ne 1 ]; then
+        echo "sync barrier timed out for $provider/$stage" >&2
+        exit 1
+      fi
+      ;;
+  esac
+fi
+
 topic="$(printf '%s' "$prompt" | awk -F': ' '/^Topic: / { print $2; exit }')"
 slug="$(printf '%s' "$prompt" | awk -F': ' '/^Topic slug: / { print $2; exit }')"
 
