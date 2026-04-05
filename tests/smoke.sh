@@ -634,6 +634,7 @@ test_auto_tag_workflow_creates_and_publishes_missing_version_tags() {
   assert_contains "$workflow" "branches:"
   assert_contains "$workflow" "main"
   assert_contains "$workflow" "contents: write"
+  assert_contains "$workflow" "packages: write"
   assert_contains "$workflow" "git fetch --tags"
   assert_contains "$workflow" "scripts/version.sh current"
   assert_contains "$workflow" "git tag -a"
