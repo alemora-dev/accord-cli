@@ -1,0 +1,8 @@
+node_modules
+dist
+.DS_Store
+.accord
+.superpowers
+coverage
+runs/
+docs/superpowers/
