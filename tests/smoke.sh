@@ -60,22 +60,22 @@ test_full_run_creates_expected_artifacts() {
     ACCORD_FIXED_TIMESTAMP="2026-04-05T12-00-00Z" \
     "$SCRIPT" --output "$tmpdir/runs" "Recent AI coding agents" >/dev/null
 
-  run_dir="$tmpdir/runs/2026-04-05T12-00-00Z-recent-ai-coding-agents"
+  run_dir="$tmpdir/runs/2026-04-05T12-00-00Z-recent-ai"
 
-  assert_file "$run_dir/recent-ai-coding-agents_research_1.md"
-  assert_file "$run_dir/recent-ai-coding-agents_claude_understanding_1.md"
-  assert_file "$run_dir/recent-ai-coding-agents_gemini_understanding_1.md"
-  assert_file "$run_dir/recent-ai-coding-agents_claude_opinion_1.md"
-  assert_file "$run_dir/recent-ai-coding-agents_gemini_opinion_1.md"
-  assert_file "$run_dir/recent-ai-coding-agents_claude_debate_1.md"
-  assert_file "$run_dir/recent-ai-coding-agents_gemini_debate_1.md"
-  assert_file "$run_dir/recent-ai-coding-agents_final_1.md"
-  assert_missing "$run_dir/recent-ai-coding-agents_codex_understanding_1.md"
-  assert_missing "$run_dir/recent-ai-coding-agents_codex_opinion_1.md"
-  assert_missing "$run_dir/recent-ai-coding-agents_codex_debate_1.md"
+  assert_file "$run_dir/recent-ai_research_1.md"
+  assert_file "$run_dir/recent-ai_claude_understanding_1.md"
+  assert_file "$run_dir/recent-ai_gemini_understanding_1.md"
+  assert_file "$run_dir/recent-ai_claude_opinion_1.md"
+  assert_file "$run_dir/recent-ai_gemini_opinion_1.md"
+  assert_file "$run_dir/recent-ai_claude_debate_1.md"
+  assert_file "$run_dir/recent-ai_gemini_debate_1.md"
+  assert_file "$run_dir/recent-ai_final_1.md"
+  assert_missing "$run_dir/recent-ai_codex_understanding_1.md"
+  assert_missing "$run_dir/recent-ai_codex_opinion_1.md"
+  assert_missing "$run_dir/recent-ai_codex_debate_1.md"
 
-  assert_contains "$run_dir/recent-ai-coding-agents_research_1.md" "Shared research"
-  assert_contains "$run_dir/recent-ai-coding-agents_final_1.md" "Final synthesis"
+  assert_contains "$run_dir/recent-ai_research_1.md" "Shared research"
+  assert_contains "$run_dir/recent-ai_final_1.md" "Final synthesis"
 }
 
 test_missing_provider_continues_with_available_ones() {
@@ -93,14 +93,14 @@ test_missing_provider_continues_with_available_ones() {
       "$SCRIPT" --output "$tmpdir/runs" "Missing Claude example" 2>&1
   )"
 
-  run_dir="$tmpdir/runs/2026-04-05T12-00-01Z-missing-claude-example"
+  run_dir="$tmpdir/runs/2026-04-05T12-00-01Z-missing-claude"
 
   assert_text_contains "$output" "Missing providers: claude"
-  assert_file "$run_dir/missing-claude-example_research_1.md"
-  assert_file "$run_dir/missing-claude-example_gemini_opinion_1.md"
-  assert_missing "$run_dir/missing-claude-example_codex_opinion_1.md"
-  assert_missing "$run_dir/missing-claude-example_claude_opinion_1.md"
-  assert_file "$run_dir/missing-claude-example_final_1.md"
+  assert_file "$run_dir/missing-claude_research_1.md"
+  assert_file "$run_dir/missing-claude_gemini_opinion_1.md"
+  assert_missing "$run_dir/missing-claude_codex_opinion_1.md"
+  assert_missing "$run_dir/missing-claude_claude_opinion_1.md"
+  assert_file "$run_dir/missing-claude_final_1.md"
 }
 
 test_missing_default_coordinator_falls_back_to_available_provider() {
@@ -118,12 +118,12 @@ test_missing_default_coordinator_falls_back_to_available_provider() {
       "$SCRIPT" --output "$tmpdir/runs" "Gemini only example" 2>&1
   )"
 
-  run_dir="$tmpdir/runs/2026-04-05T12-00-02Z-gemini-only-example"
+  run_dir="$tmpdir/runs/2026-04-05T12-00-02Z-gemini-only"
 
   assert_text_contains "$output" "Coordinator codex is unavailable; falling back to gemini"
-  assert_file "$run_dir/gemini-only-example_research_1.md"
-  assert_file "$run_dir/gemini-only-example_gemini_understanding_1.md"
-  assert_file "$run_dir/gemini-only-example_final_1.md"
+  assert_file "$run_dir/gemini-only_research_1.md"
+  assert_file "$run_dir/gemini-only_gemini_understanding_1.md"
+  assert_file "$run_dir/gemini-only_final_1.md"
 }
 
 test_llms_flag_assigns_roles_and_preserves_order() {
@@ -141,17 +141,17 @@ test_llms_flag_assigns_roles_and_preserves_order() {
       "$SCRIPT" --output "$tmpdir/runs" --llms "codex:coordinator,gemini:debater,claude:debater" "Ordered roles example" 2>&1
   )"
 
-  run_dir="$tmpdir/runs/2026-04-05T12-00-03Z-ordered-roles-example"
+  run_dir="$tmpdir/runs/2026-04-05T12-00-03Z-ordered-roles"
 
   assert_text_contains "$output" "Coordinator: codex"
   assert_text_contains "$output" "Debaters: gemini, claude"
-  assert_file "$run_dir/ordered-roles-example_research_1.md"
-  assert_file "$run_dir/ordered-roles-example_gemini_understanding_1.md"
-  assert_file "$run_dir/ordered-roles-example_claude_understanding_1.md"
-  assert_missing "$run_dir/ordered-roles-example_codex_understanding_1.md"
-  assert_file "$run_dir/ordered-roles-example_gemini_debate_1.md"
-  assert_file "$run_dir/ordered-roles-example_claude_debate_1.md"
-  assert_missing "$run_dir/ordered-roles-example_codex_debate_1.md"
+  assert_file "$run_dir/ordered-roles_research_1.md"
+  assert_file "$run_dir/ordered-roles_gemini_understanding_1.md"
+  assert_file "$run_dir/ordered-roles_claude_understanding_1.md"
+  assert_missing "$run_dir/ordered-roles_codex_understanding_1.md"
+  assert_file "$run_dir/ordered-roles_gemini_debate_1.md"
+  assert_file "$run_dir/ordered-roles_claude_debate_1.md"
+  assert_missing "$run_dir/ordered-roles_codex_debate_1.md"
 }
 
 test_accordrc_defaults_are_used_when_llms_flag_missing() {
@@ -172,13 +172,13 @@ test_accordrc_defaults_are_used_when_llms_flag_missing() {
       "$SCRIPT" --output "$tmpdir/runs" "Config roles example" 2>&1
   )"
 
-  run_dir="$tmpdir/runs/2026-04-05T12-00-04Z-config-roles-example"
+  run_dir="$tmpdir/runs/2026-04-05T12-00-04Z-config-roles"
 
   assert_text_contains "$output" "Coordinator: gemini"
   assert_text_contains "$output" "Debaters: codex"
-  assert_file "$run_dir/config-roles-example_research_1.md"
-  assert_file "$run_dir/config-roles-example_codex_understanding_1.md"
-  assert_missing "$run_dir/config-roles-example_gemini_understanding_1.md"
+  assert_file "$run_dir/config-roles_research_1.md"
+  assert_file "$run_dir/config-roles_codex_understanding_1.md"
+  assert_missing "$run_dir/config-roles_gemini_understanding_1.md"
 }
 
 test_llms_flag_overrides_config_defaults() {
@@ -199,13 +199,13 @@ test_llms_flag_overrides_config_defaults() {
       "$SCRIPT" --output "$tmpdir/runs" --llms "codex:coordinator,claude:debater" "Flag beats config" 2>&1
   )"
 
-  run_dir="$tmpdir/runs/2026-04-05T12-00-05Z-flag-beats-config"
+  run_dir="$tmpdir/runs/2026-04-05T12-00-05Z-flag-beats"
 
   assert_text_contains "$output" "Coordinator: codex"
   assert_text_contains "$output" "Debaters: claude"
-  assert_file "$run_dir/flag-beats-config_claude_understanding_1.md"
-  assert_missing "$run_dir/flag-beats-config_codex_understanding_1.md"
-  assert_missing "$run_dir/flag-beats-config_gemini_understanding_1.md"
+  assert_file "$run_dir/flag-beats_claude_understanding_1.md"
+  assert_missing "$run_dir/flag-beats_codex_understanding_1.md"
+  assert_missing "$run_dir/flag-beats_gemini_understanding_1.md"
 }
 
 test_invalid_llms_spec_fails_fast() {
@@ -229,6 +229,61 @@ test_invalid_llms_spec_fails_fast() {
   assert_text_contains "$output" "Unsupported LLM role"
 }
 
+test_llms_flag_allows_coordinator_to_also_be_debater() {
+  local tmpdir fake_bin output run_dir
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+  fake_bin="$tmpdir/fake-bin"
+  make_fake_bin "$fake_bin" codex gemini
+
+  output="$(
+    PATH="$fake_bin:$PATH" \
+      ACCORD_CODEX_BIN="$fake_bin/codex" \
+      ACCORD_GEMINI_BIN="$fake_bin/gemini" \
+      ACCORD_FIXED_TIMESTAMP="2026-04-05T12-00-06Z" \
+      "$SCRIPT" --output "$tmpdir/runs" --llms "codex:coordinator,codex:debater,gemini:debater" "Read code" 2>&1
+  )"
+
+  run_dir="$tmpdir/runs/2026-04-05T12-00-06Z-read-code"
+
+  assert_text_contains "$output" "Coordinator: codex"
+  assert_text_contains "$output" "Debaters: codex, gemini"
+  assert_file "$run_dir/read-code_research_1.md"
+  assert_file "$run_dir/read-code_codex_understanding_1.md"
+  assert_file "$run_dir/read-code_gemini_understanding_1.md"
+  assert_file "$run_dir/read-code_codex_opinion_1.md"
+  assert_file "$run_dir/read-code_gemini_opinion_1.md"
+  assert_file "$run_dir/read-code_codex_debate_1.md"
+  assert_file "$run_dir/read-code_gemini_debate_1.md"
+  assert_file "$run_dir/read-code_final_1.md"
+}
+
+test_long_prompt_is_compacted_into_safe_run_and_artifact_names() {
+  local tmpdir fake_bin prompt run_dir run_name research_file research_name
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+  fake_bin="$tmpdir/fake-bin"
+  make_fake_bin "$fake_bin" codex claude gemini
+  prompt="read code from /Users/diegoamaya/Documents/ale_mora/projects/accord-cli all files understand the market check reddit and propose missing features while keeping the tool simple powerful elegant and reliable for open source users"
+  prompt="$prompt $prompt $prompt"
+
+  PATH="$fake_bin:$PATH" \
+    ACCORD_CODEX_BIN="$fake_bin/codex" \
+    ACCORD_CLAUDE_BIN="$fake_bin/claude" \
+    ACCORD_GEMINI_BIN="$fake_bin/gemini" \
+    ACCORD_FIXED_TIMESTAMP="2026-04-05T12-00-06Z" \
+    "$SCRIPT" --output "$tmpdir/runs" --llms "codex:coordinator,claude:debater,gemini:debater" "$prompt" >/dev/null
+
+  run_dir="$(find "$tmpdir/runs" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+  [ -n "$run_dir" ] || fail "expected one run directory for long prompt"
+
+  run_name="$(basename "$run_dir")"
+  [ "$run_name" = "2026-04-05T12-00-06Z-read-code" ] || fail "expected two-word run directory name, got $run_name"
+
+  research_file="$(find "$run_dir" -maxdepth 1 -name '*_research_1.md' | head -n 1)"
+  assert_file "$research_file"
+  research_name="$(basename "$research_file")"
+  [ "$research_name" = "read-code_research_1.md" ] || fail "expected two-word artifact name, got $research_name"
+}
+
 main() {
   test_full_run_creates_expected_artifacts
   test_missing_provider_continues_with_available_ones
@@ -237,6 +292,8 @@ main() {
   test_accordrc_defaults_are_used_when_llms_flag_missing
   test_llms_flag_overrides_config_defaults
   test_invalid_llms_spec_fails_fast
+  test_llms_flag_allows_coordinator_to_also_be_debater
+  test_long_prompt_is_compacted_into_safe_run_and_artifact_names
   echo "smoke tests passed"
 }
 
