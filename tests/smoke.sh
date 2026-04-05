@@ -61,6 +61,53 @@ make_fake_bin() {
   done
 }
 
+test_prompt_templates_encode_the_expected_guidance() {
+  local tmpdir research_file understanding_file opinion_file debate_file final_file
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
+  research_file="$tmpdir/research.md"
+  understanding_file="$tmpdir/understanding.md"
+  opinion_file="$tmpdir/opinion.md"
+  debate_file="$tmpdir/debate.md"
+  final_file="$tmpdir/final.md"
+
+  cat >"$research_file" <<'EOF'
+# Research
+
+- Fact: something useful
+EOF
+  cat >"$understanding_file" <<'EOF'
+# Understanding
+
+- Fact: something useful
+EOF
+  cat >"$opinion_file" <<'EOF'
+# Opinion
+
+- Answer: something useful
+EOF
+  cat >"$debate_file" <<'EOF'
+# Debate
+
+- Revision: something useful
+EOF
+  cat >"$final_file" <<'EOF'
+# Final
+
+- Answer: something useful
+EOF
+
+  assert_text_contains "$(accord::shared_research_prompt "$ROOT" "Prompt topic" "prompt-topic")" "reuse without re-reading the sources"
+  assert_text_contains "$(accord::shared_research_prompt "$ROOT" "Prompt topic" "prompt-topic")" "short source list"
+  assert_text_contains "$(accord::provider_understanding_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file")" "main tension"
+  assert_text_contains "$(accord::provider_understanding_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file")" "say when the research is thin"
+  assert_text_contains "$(accord::provider_opinion_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file")" "start with the answer or recommendation in one sentence"
+  assert_text_contains "$(accord::provider_opinion_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file")" "avoid repeating the shared research"
+  assert_text_contains "$(accord::provider_debate_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$opinion_file" "$debate_file")" "only changes the parts of your answer"
+  assert_text_contains "$(accord::provider_debate_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$opinion_file" "$debate_file")" "if nothing changes, say that plainly"
+  assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "one or two sentences"
+  assert_text_contains "$(accord::final_synthesis_prompt "$ROOT" "Prompt topic" "prompt-topic" "codex" "$research_file" "$understanding_file" "$opinion_file" "$debate_file")" "do not repeat them line by line"
+}
+
 test_full_run_creates_expected_artifacts() {
   local tmpdir fake_bin run_dir
   tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/accord-smoke.XXXXXX")"
@@ -326,6 +373,11 @@ test_long_prompt_is_compacted_into_safe_run_and_artifact_names() {
 }
 
 main() {
+  # shellcheck source=../accord/lib/common.sh
+  . "$ROOT/accord/lib/common.sh"
+  # shellcheck source=../accord/lib/prompts.sh
+  . "$ROOT/accord/lib/prompts.sh"
+  test_prompt_templates_encode_the_expected_guidance
   test_full_run_creates_expected_artifacts
   test_missing_provider_continues_with_available_ones
   test_missing_default_coordinator_falls_back_to_available_provider
