@@ -10,6 +10,7 @@ Accord is intentionally small:
 - [`VERSION`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/VERSION) is the single source of truth for release versioning
 - [`scripts/version.sh`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/scripts/version.sh) reads and bumps the semantic version
 - [`scripts/package.sh`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/scripts/package.sh) creates a small release archive in `dist/`
+- [`.github/workflows/auto-tag.yml`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/.github/workflows/auto-tag.yml) auto-tags new versions on `main`
 - [`.github/workflows/release.yml`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/.github/workflows/release.yml) publishes tagged releases to GitHub Releases and GHCR
 - `runs/` stores generated markdown artifacts for each execution
 
@@ -45,7 +46,9 @@ There is no session model, build step, or internal TypeScript domain layer anymo
 ## Release Flow
 
 - CI on pull requests and pushes to `main` builds the tarball and uploads it as a workflow artifact.
+- Pushes to `main` auto-create `v<version>` when the tag does not already exist.
 - Tagging `v<version>` triggers the release workflow.
+- The release workflow can also be called directly by the auto-tag workflow.
 - The release workflow verifies that the tag matches `VERSION`.
 - It then rebuilds the tarball, creates a GitHub Release, and publishes the same archive to GHCR as an OCI package.
 
