@@ -252,7 +252,12 @@ accord::run_stage_for_providers() {
   local output_file
   local peer_files=()
   local peer_file_lines=""
+  local prompts=()
+  local output_files=()
+  local launched=()
+  local pids=()
   local successful=()
+  local index
 
   for provider in "${providers[@]}"; do
     case "$stage" in
@@ -305,8 +310,26 @@ EOF
         ;;
     esac
 
+    launched+=("$provider")
+    prompts+=("$prompt")
+    output_files+=("$output_file")
+  done
+
+  for index in "${!launched[@]}"; do
+    provider="${launched[$index]}"
     accord::log "Running $stage for $provider"
-    if accord::run_provider "$provider" "$prompt" "$output_file" "provider_${stage}" "$run_dir"; then
+    accord::run_provider \
+      "$provider" \
+      "${prompts[$index]}" \
+      "${output_files[$index]}" \
+      "provider_${stage}" \
+      "$run_dir" &
+    pids+=("$!")
+  done
+
+  for index in "${!launched[@]}"; do
+    provider="${launched[$index]}"
+    if wait "${pids[$index]}"; then
       successful+=("$provider")
     else
       accord::log "Provider $provider failed during $stage; continuing"
