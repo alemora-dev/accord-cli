@@ -22,6 +22,7 @@ Optional defaults file:
 
 ```bash
 cat .accordrc
+ # ACCORD_PROVIDERS=codex,claude,gemini
 # ACCORD_LLMS=codex:coordinator,claude:debater,gemini:debater
 ```
 
@@ -37,15 +38,32 @@ To expose it as `accord` on your shell path:
 ln -s "$PWD/bin/accord" /usr/local/bin/accord
 ```
 
-## Expected local CLIs
+## Provider Contract
 
-Accord looks for these commands by default:
+Accord keeps a tiny provider contract in `.accordrc`:
+
+- `ACCORD_PROVIDERS=codex,claude,gemini`
+- `ACCORD_PROVIDER_<NAME>_STYLE=<codex|claude|gemini>`
+- `ACCORD_PROVIDER_<NAME>_BIN=<command>`
+
+That lets you define custom provider names while still reusing the built-in runner styles. Example:
+
+```bash
+ACCORD_PROVIDERS=writer,critic
+ACCORD_PROVIDER_WRITER_STYLE=codex
+ACCORD_PROVIDER_WRITER_BIN=codex
+ACCORD_PROVIDER_CRITIC_STYLE=gemini
+ACCORD_PROVIDER_CRITIC_BIN=gemini
+ACCORD_LLMS=writer:coordinator,critic:debater
+```
+
+If no provider config is present, Accord defaults to:
 
 - `codex`
 - `claude`
 - `gemini`
 
-You can override the executable path for each one with:
+Legacy binary overrides still work for the built-in styles:
 
 - `ACCORD_CODEX_BIN`
 - `ACCORD_CLAUDE_BIN`

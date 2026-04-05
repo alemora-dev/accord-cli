@@ -76,6 +76,18 @@ accord::join_by() {
   done
 }
 
+accord::list_contains() {
+  local needle="$1"
+  shift
+  local item
+
+  for item in "$@"; do
+    [ "$item" = "$needle" ] && return 0
+  done
+
+  return 1
+}
+
 accord::read_file() {
   local path="$1"
 

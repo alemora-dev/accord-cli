@@ -1,1 +1,2 @@
+ACCORD_PROVIDERS=codex,claude,gemini
 ACCORD_LLMS=codex:coordinator,claude:debater,gemini:debater

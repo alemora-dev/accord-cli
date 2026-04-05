@@ -54,35 +54,22 @@ accord::resolve_available_providers() {
   fi
 }
 
-accord::list_contains() {
-  local needle="$1"
-  shift
-  local item
-
-  for item in "$@"; do
-    [ "$item" = "$needle" ] && return 0
-  done
-
-  return 1
-}
-
-accord::load_configured_llms() {
+accord::load_runtime_config() {
   local root="$1"
   local config_file="${ACCORD_CONFIG_FILE:-$root/.accordrc}"
-  local spec=""
 
   if [ ! -f "$config_file" ]; then
     ACCORD_CONFIGURED_LLM_SPEC=""
     return
   fi
 
-  spec="$(
-    unset ACCORD_LLMS
-    . "$config_file" >/dev/null 2>&1 || exit 1
-    printf '%s' "${ACCORD_LLMS:-}"
-  )" || accord::fail "Failed to load config file: $config_file"
+  (
+    . "$config_file" >/dev/null 2>&1
+  ) || accord::fail "Failed to load config file: $config_file"
 
-  ACCORD_CONFIGURED_LLM_SPEC="$spec"
+  # shellcheck source=/dev/null
+  . "$config_file"
+  ACCORD_CONFIGURED_LLM_SPEC="${ACCORD_LLMS:-}"
 }
 
 accord::parse_llms_spec() {
@@ -313,6 +300,7 @@ accord::main() {
   local artifact_files=()
 
   root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  accord::load_runtime_config "$root"
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -376,7 +364,6 @@ accord::main() {
   }
 
   if [ -z "$llms_spec" ] && [ "$old_flags_used" = "0" ]; then
-    accord::load_configured_llms "$root"
     llms_spec="$ACCORD_CONFIGURED_LLM_SPEC"
   fi
 
