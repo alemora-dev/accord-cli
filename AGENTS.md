@@ -23,3 +23,52 @@ Recent history uses Conventional Commit prefixes such as `feat:`, `docs:`, and `
 
 ## KISS Policy
 Keep Accord small and inspectable. Prefer the smallest bash change that improves behavior, avoid framework-style abstractions, avoid adding many modes or knobs, and keep prompt logic readable enough to audit from the repo.
+
+## Prompt Mode Detection
+
+`accord::prompt_mode` in `accord/lib/common.sh` lowercases the topic string and pattern-matches it. If any of the following keywords appear, it returns `detailed` and the runtime loads the `.detailed.md` variant of each prompt template: `analysis`, `analyse`, `analyze`, `roadmap`, `compare`, `comparison`, `audit`, `gap`, `gaps`, `launch`, `go live`, `mvp`, `strategy`, `market`, `status`, `iterate`, `plan`, `planning`, `review`, `evaluate`, `readiness`. Any other topic returns `compact`.
+
+`accord::template_path` in `accord/lib/prompts.sh` selects the file: for `detailed` mode it looks for `accord/prompts/<name>.detailed.md` and falls back to the compact file if the detailed variant is absent.
+
+## Adding a New Prompt Template
+
+Each stage has a compact prompt file and an optional detailed variant:
+
+- `accord/prompts/<name>.md` — required, used for compact mode and as fallback
+- `accord/prompts/<name>.detailed.md` — optional, loaded when topic triggers detailed mode
+
+Filename convention: lowercase with hyphens, `.md` extension (e.g. `provider-debate.md`). To wire a new template into the pipeline, add a case to `accord::run_stage_for_providers` in `accord/lib/pipeline.sh` and a corresponding prompt builder function in `accord/lib/prompts.sh` following the existing pattern. Verify with `bash tests/smoke.sh` and a manual run if real provider CLIs are available.
+
+## Environment Variable Reference
+
+All variables can be set in `.accordrc` or in the shell environment. The config file path defaults to `<repo-root>/.accordrc` and can be overridden with `ACCORD_CONFIG_FILE`.
+
+| Variable | Effect |
+|----------|--------|
+| `ACCORD_PROVIDERS` | Comma-separated list of active provider names (default: `codex,claude,gemini`) |
+| `ACCORD_LLMS` | Role spec string, e.g. `codex:coordinator,claude:debater,gemini:debater` |
+| `ACCORD_PROVIDER_<NAME>_STYLE` | Maps a custom provider name to a built-in runner style (`codex`, `claude`, or `gemini`) |
+| `ACCORD_PROVIDER_<NAME>_BIN` | Overrides the binary command for that provider |
+| `ACCORD_CONFIG_FILE` | Absolute or relative path to an alternate config file |
+| `ACCORD_FIXED_TIMESTAMP` | Forces a fixed timestamp string — used in smoke tests for deterministic run dirs |
+| `ACCORD_CODEX_BIN` | Legacy binary override for the `codex` style |
+| `ACCORD_CLAUDE_BIN` | Legacy binary override for the `claude` style |
+| `ACCORD_GEMINI_BIN` | Legacy binary override for the `gemini` style |
+
+`--llms` on the command line takes precedence over `ACCORD_LLMS` in `.accordrc`. Legacy `--coordinator` and `--providers` flags are still accepted but only apply when `--llms` is absent and no `.accordrc` LLMS entry is set.
+
+## Stage Pipeline and Artifact Naming
+
+Five stages run in order for each debate:
+
+| Stage | Who runs it | Output file |
+|-------|-------------|-------------|
+| `shared_research` | Coordinator only | `<slug>_research_1.md` |
+| `provider_understanding` | All active debaters (parallel) | `<slug>_<provider>_understanding_1.md` |
+| `provider_opinion` | Debaters that completed understanding (parallel) | `<slug>_<provider>_opinion_1.md` |
+| `provider_debate` | Debaters that completed opinion (parallel) | `<slug>_<provider>_debate_1.md` |
+| `final_synthesis` | Coordinator only | `<slug>_final_1.md` |
+
+`run_summary.md` is written after all stages complete and lists coordinator, debaters, provider styles, artifact names, and placeholder token/cost fields.
+
+The topic slug is derived from the first two hyphen-delimited words of the lowercased, punctuation-stripped topic string (via `accord::topic_slug`). The `_1` suffix in artifact names is a revision index reserved for future multi-round support.

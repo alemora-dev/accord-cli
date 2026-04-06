@@ -1,10 +1,85 @@
 # Accord
 
+![version](https://img.shields.io/badge/version-0.1.0-blue)
+![shell](https://img.shields.io/badge/shell-bash-89e051)
+
 Accord is a small bash orchestrator for local multi-agent debate runs.
 
 The coordinator, `codex` by default, does one shared web-research pass, writes a single research markdown file, then fans the same topic out to the available provider CLIs. Each provider writes an understanding note, an opinion, and one debate revision after reading peer opinions. The coordinator then writes the final synthesis.
 
 The prompt set is tuned for short, bullet-first artifacts so each file is easier to scan without turning the workflow into a rigid schema.
+
+---
+
+## Quick Start
+
+```bash
+# Install (one-time)
+ln -s "$PWD/bin/accord" /usr/local/bin/accord
+
+# Run a debate
+accord "Recent AI coding agents"
+```
+
+---
+
+## Pipeline
+
+```
+  topic prompt
+       │
+       ▼
+ ┌──────────────────┐
+ │  shared research │  ← coordinator
+ └────────┬─────────┘
+          │
+          ▼
+ ┌──────────────────┐
+ │  understanding   │  ← all debaters (parallel)
+ └────────┬─────────┘
+          │
+          ▼
+ ┌──────────────────┐
+ │     opinion      │  ← all debaters (parallel)
+ └────────┬─────────┘
+          │
+          ▼
+ ┌──────────────────┐
+ │     debate       │  ← all debaters (parallel, reads peers)
+ └────────┬─────────┘
+          │
+          ▼
+ ┌──────────────────┐
+ │ final synthesis  │  ← coordinator
+ └────────┬─────────┘
+          │
+          ▼
+  runs/<timestamp>-<slug>/
+```
+
+---
+
+## What You Get
+
+Each run produces a self-contained folder of markdown files:
+
+```
+runs/
+└── 2026-04-06T12-00-00Z-recent-ai/
+    ├── recent-ai_research_1.md
+    ├── recent-ai_claude_understanding_1.md
+    ├── recent-ai_claude_opinion_1.md
+    ├── recent-ai_claude_debate_1.md
+    ├── recent-ai_gemini_understanding_1.md
+    ├── recent-ai_gemini_opinion_1.md
+    ├── recent-ai_gemini_debate_1.md
+    ├── recent-ai_codex_final_1.md
+    └── run_summary.md
+```
+
+`run_summary.md` is a small transparency file with the coordinator, debaters, provider styles, artifact list, and placeholder token/cost fields.
+
+---
 
 ## Usage
 
@@ -53,6 +128,8 @@ To expose it as `accord` on your shell path:
 ln -s "$PWD/bin/accord" /usr/local/bin/accord
 ```
 
+---
+
 ## Provider Contract
 
 Accord keeps a tiny provider contract in `.accordrc`:
@@ -86,6 +163,8 @@ Legacy binary overrides still work for the built-in styles:
 
 If a provider is missing, Accord reports it and continues with the ones that are available. With role-based config, Accord keeps the configured coordinator when possible and otherwise falls back to the first available provider in the requested order.
 
+---
+
 ## Roles And Defaults
 
 Accord now supports a small role-aware config layer:
@@ -95,6 +174,8 @@ Accord now supports a small role-aware config layer:
 - `--llms` overrides `.accordrc`
 - coordinator and debaters are treated as separate roles by default
 - if the configured coordinator is unavailable, Accord promotes the first available provider and keeps going
+
+---
 
 ## Run Layout
 
@@ -111,9 +192,7 @@ Artifacts follow this shape:
 
 With the default `.accordrc`, `codex` coordinates and `claude` plus `gemini` produce the debater artifacts.
 
-`run_summary.md` is a small transparency file with the coordinator, debaters, provider styles, artifact list, and placeholder token/cost fields.
-
-Prompt assets and shell helpers live under [`accord/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord).
+Prompt assets and shell helpers live under [`accord/`](accord/).
 
 Release packaging is kept small on purpose:
 
@@ -134,6 +213,8 @@ That creates a GitHub Release with the tarball attached and publishes a matching
 
 On normal merges to `main`, Accord now auto-tags the current version if that tag does not already exist, then runs the same release publishing flow.
 
+---
+
 ## Development
 
 Smoke tests:
@@ -144,5 +225,5 @@ bash tests/smoke.sh
 
 Core docs:
 
-- [`docs/architecture.md`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/docs/architecture.md)
-- [`docs/testing.md`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/docs/testing.md)
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/testing.md`](docs/testing.md)
