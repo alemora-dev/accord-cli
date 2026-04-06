@@ -68,7 +68,7 @@ In this mode, the agent performing the skill is the source of truth for the coor
 1.  **Shared Research**: The agent reads the research prompt, generates the content, and writes it to the run directory.
 2.  **Debater Delegation**: The agent calls `./bin/accord` with the following flags to skip its internal coordination stages:
     - `--run-dir <dir>`: Uses the directory created by the agent.
-    - `--slug <slug>`: Uses the same filename slug as the agent.
+    - `--slug <slug>`: Uses the same filename slug as the agent. This slug is used as the **prefix** for all stage filenames (e.g., `<slug>_research_1.md`, `<slug>_<provider>_debate_1.md`).
     - `--skip-research`: Tells the binary NOT to run its own research stage.
     - `--skip-synthesis`: Tells the binary NOT to run its own synthesis stage.
 3.  **Final Synthesis**: After the binary completes the debater stages, the agent reads all outputs and generates the final synthesis.

@@ -1,6 +1,9 @@
 # Accord — Claude Code Session Notes
 
-Accord is a pure-bash orchestrator for local multi-agent debates. There is no build step and no compile phase. The product is the shell pipeline in `accord/lib/`.
+> **Note:** Keep this file in sync with `GEMINI.md` for any core logic changes (Key Files, Stage Pipeline, etc.).
+
+Accord is a pure-bash orchestrator for local multi-agent debates.
+ There is no build step and no compile phase. The product is the shell pipeline in `accord/lib/`.
 
 ## The /accord Skill
 
