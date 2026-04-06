@@ -1,243 +1,99 @@
-# Accord
+# Accord v2 — The Engineering-Grade Multi-Agent Council
 
-![version](https://img.shields.io/badge/version-0.1.0-blue)
-![shell](https://img.shields.io/badge/shell-bash-89e051)
+[![version](https://img.shields.io/badge/version-0.2.0--beta-blue)](https://github.com/alemora-dev/accord-cli)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Accord is a small bash orchestrator for local multi-agent debate runs.
+**Professional Architectural Decision Records (ADRs), not just ephemeral chat opinions.**
 
-The coordinator, `codex` by default, does one shared web-research pass, writes a single research markdown file, then fans the same topic out to the available provider CLIs. Each provider writes an understanding note, an opinion, and one debate revision after reading peer opinions. The coordinator then writes the final synthesis.
-
-The prompt set is tuned for short, bullet-first artifacts so each file is easier to scan without turning the workflow into a rigid schema.
+Accord is a high-reliability orchestrator for local multi-agent debates. It turns LLM disagreement into verifiable, auditable project artifacts. While other tools give you a "second opinion" that disappears when you close your chat, Accord generates a permanent paper trail you can commit to your repository.
 
 ---
 
-## Quick Start
+## 🏗️ How it Works
+
+Accord orchestrates a "Council" of diverse AI experts to stress-test your ideas.
+
+```mermaid
+graph TD
+    A[Topic Prompt] --> B[Shared Research]
+    B --> C{Expert Council}
+    C --> D[Security Expert]
+    C --> E[Performance Lead]
+    C --> F[System Architect]
+    D & E & F --> G[Multi-Round Debate]
+    G --> H[Final Synthesis]
+    H --> I[runs/timestamp-slug/]
+```
+
+1. **Shared Research:** A coordinator (Claude/Gemini) performs a ground-truth research pass.
+2. **Parallel Deliberation:** Multiple expert "Personas" analyze the research independently.
+3. **Cross-Examination:** Agents read peer opinions and revise their positions or critique others.
+4. **Final Synthesis:** A comprehensive summary is generated, highlighting consensus and risks.
+5. **Artifact Generation:** Every run writes a full set of Markdown documents to your local `runs/` folder.
+
+---
+
+## 🚀 Why Accord?
+
+| Feature | Accord-CLI | Ephemeral Assistants |
+| :--- | :--- | :--- |
+| **Auditability** | Permanent `.md` files in your repo | Disappears in chat history |
+| **Reliability** | TypeScript async/await (v2) | Prone to "yes-man" bias |
+| **Personas** | Specialist roles (Security, Perf, etc.) | Generic "AI Assistant" |
+| **KISS** | Single binary, zero dependencies | Cloud-only or heavy Python envs |
+| **Integration** | Native MCP Server + Agent Skills | Manual copy-pasting |
+
+---
+
+## 🛠️ Installation
+
+Accord v2 is distributed as a single, standalone binary. No Node.js required.
 
 ```bash
-# Install (one-time)
-ln -s "$PWD/bin/accord" /usr/local/bin/accord
-
-# Run a debate
-accord "Recent AI coding agents"
-```
-
----
-
-## Pipeline
-
-```
-  topic prompt
-       │
-       ▼
- ┌──────────────────┐
- │  shared research │  ← coordinator
- └────────┬─────────┘
-          │
-          ▼
- ┌──────────────────┐
- │  understanding   │  ← all debaters (parallel)
- └────────┬─────────┘
-          │
-          ▼
- ┌──────────────────┐
- │     opinion      │  ← all debaters (parallel)
- └────────┬─────────┘
-          │
-          ▼
- ┌──────────────────┐
- │     debate       │  ← all debaters (parallel, reads peers)
- └────────┬─────────┘
-          │
-          ▼
- ┌──────────────────┐
- │ final synthesis  │  ← coordinator
- └────────┬─────────┘
-          │
-          ▼
-  runs/<timestamp>-<slug>/
+# macOS / Linux
+curl -sSL https://accord.alemora.me/install | bash
 ```
 
 ---
 
-## What You Get
+## 🤖 Usage
 
-Each run produces a self-contained folder of markdown files:
-
-```
-runs/
-└── 2026-04-06T12-00-00Z-recent-ai/
-    ├── recent-ai_research_1.md
-    ├── recent-ai_claude_understanding_1.md
-    ├── recent-ai_claude_opinion_1.md
-    ├── recent-ai_claude_debate_1.md
-    ├── recent-ai_gemini_understanding_1.md
-    ├── recent-ai_gemini_opinion_1.md
-    ├── recent-ai_gemini_debate_1.md
-    ├── recent-ai_final_1.md
-    └── run_summary.md
-```
-
-`run_summary.md` is a small transparency file with the coordinator, debaters, provider styles, artifact list, and placeholder token/cost fields.
-
-## Using Accord as a Skill (Claude / Gemini)
-
-Accord can be used directly as a skill within your AI agent (Claude Code or Gemini CLI). When invoked via `/accord`, the agent acts as the **Coordinator**, managing research and synthesis, and delegates only the debater roles to the binary.
-
+### CLI Mode
+Run a full debate from your terminal:
 ```bash
-# Run a debate where the current agent coordinates
-/accord "Topic"
-
-# Explicitly select debaters
-/accord --llms codex:debater,gemini:debater "Topic"
+accord "Should we migrate to a microservices architecture for the payment gateway?"
 ```
 
-This mode allows the agent to provide its own research and final synthesis, keeping you in the same context for the entire debate run.
-
----
-
-## Usage
-
-Run the repo-local entrypoint:
-
+### Specialist Teams
+Use pre-defined teams of experts:
 ```bash
-./bin/accord "Recent AI coding agents"
+accord --team audit "Review the new authentication flow"
 ```
 
-Print the current release version:
-
+### As an Agent Skill (Claude Code / Gemini CLI)
+Accord integrates natively with your AI coding assistant.
 ```bash
-./bin/accord --version
-```
-
-Generate the next semantic version or bump `VERSION` automatically:
-
-```bash
-./scripts/version.sh next patch
-./scripts/version.sh bump patch
-```
-
-Primary role-order configuration:
-
-```bash
-./bin/accord --llms codex:coordinator,claude:debater,gemini:debater "Best browser automation workflows"
-```
-
-Optional defaults file:
-
-```bash
-cat .accordrc
- # ACCORD_PROVIDERS=codex,claude,gemini
-# ACCORD_LLMS=codex:coordinator,claude:debater,gemini:debater
-```
-
-Legacy flags still work when `--llms` is omitted and no `.accordrc` is present:
-
-```bash
-./bin/accord --coordinator gemini --providers codex,gemini --output ./runs "Best browser automation workflows"
-```
-
-To expose it as `accord` on your shell path:
-
-```bash
-ln -s "$PWD/bin/accord" /usr/local/bin/accord
+/accord "Evaluate the trade-offs of using Bun vs Node.js for this project"
 ```
 
 ---
 
-## Provider Contract
+## 📜 Project Philosophy
+> "Reliability comes from engineering discipline, not better prompts."
 
-Accord keeps a tiny provider contract in `.accordrc`:
-
-- `ACCORD_PROVIDERS=codex,claude,gemini`
-- `ACCORD_PROVIDER_<NAME>_STYLE=<codex|claude|gemini>`
-- `ACCORD_PROVIDER_<NAME>_BIN=<command>`
-
-That lets you define custom provider names while still reusing the built-in runner styles. Example:
-
-```bash
-ACCORD_PROVIDERS=writer,critic
-ACCORD_PROVIDER_WRITER_STYLE=codex
-ACCORD_PROVIDER_WRITER_BIN=codex
-ACCORD_PROVIDER_CRITIC_STYLE=gemini
-ACCORD_PROVIDER_CRITIC_BIN=gemini
-ACCORD_LLMS=writer:coordinator,critic:debater
-```
-
-If no provider config is present, Accord defaults to:
-
-- `codex`
-- `claude`
-- `gemini`
-
-Legacy binary overrides still work for the built-in styles:
-
-- `ACCORD_CODEX_BIN`
-- `ACCORD_CLAUDE_BIN`
-- `ACCORD_GEMINI_BIN`
-
-If a provider is missing, Accord reports it and continues with the ones that are available. With role-based config, Accord keeps the configured coordinator when possible and otherwise falls back to the first available provider in the requested order.
+Accord is built for engineers who value infrastructure over hype. Every stage is transparent, every prompt is editable, and every output is verifiable.
 
 ---
 
-## Roles And Defaults
+## 📂 Run Layout
 
-Accord now supports a small role-aware config layer:
-
-- `--llms` accepts an ordered list like `codex:coordinator,claude:debater,gemini:debater`
-- `.accordrc` can define `ACCORD_LLMS=...` for repo defaults
-- `--llms` overrides `.accordrc`
-- coordinator and debaters are treated as separate roles by default
-- if the configured coordinator is unavailable, Accord promotes the first available provider and keeps going
+Each run produces a self-contained folder:
+- `topic_research_1.md` — The ground-truth data.
+- `topic_security_opinion_1.md` — Specialist perspective.
+- `topic_final_1.md` — The synthesis for your ADR.
+- `run_summary.md` — Metadata and transparency report.
 
 ---
 
-## Run Layout
-
-Each run writes to `runs/<timestamp>-<topic-slug>/`.
-
-Artifacts follow this shape:
-
-- `<topic>_research_1.md`
-- `<topic>_<provider>_understanding_1.md`
-- `<topic>_<provider>_opinion_1.md`
-- `<topic>_<provider>_debate_1.md`
-- `<topic>_final_1.md`
-- `run_summary.md`
-
-With the default `.accordrc`, `codex` coordinates and `claude` plus `gemini` produce the debater artifacts.
-
-Prompt assets and shell helpers live under [`accord/`](accord/).
-
-Release packaging is kept small on purpose:
-
-```bash
-./scripts/package.sh
-```
-
-That writes a versioned tarball to `dist/`.
-
-Publishing can still be triggered manually:
-
-```bash
-git tag "v$(./scripts/version.sh current)"
-git push origin "v$(./scripts/version.sh current)"
-```
-
-That creates a GitHub Release with the tarball attached and publishes a matching package to GHCR.
-
-On normal merges to `main`, Accord now auto-tags the current version if that tag does not already exist, then runs the same release publishing flow.
-
----
-
-## Development
-
-Smoke tests:
-
-```bash
-bash tests/smoke.sh
-```
-
-Core docs:
-
-- [`docs/architecture.md`](docs/architecture.md)
-- [`docs/testing.md`](docs/testing.md)
+## 🤝 Contributing
+Accord is open-source. Check our [CONTRIBUTING.md](CONTRIBUTING.md) for details on the TypeScript rewrite and how to add new expert personas.
