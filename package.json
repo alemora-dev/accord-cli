@@ -1,0 +1,12 @@
+{
+  "name": "accord-v2",
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "build": "bun run scripts/build.ts"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}
