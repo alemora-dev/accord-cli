@@ -1,158 +1,106 @@
-# Accord
+# Accord — Multi-Agent Debates That Commit to Your Repo
 
-![version](https://img.shields.io/badge/version-0.1.0-blue)
-![shell](https://img.shields.io/badge/shell-bash-89e051)
+[![version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/alemora-dev/accord-cli/releases)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![shell](https://img.shields.io/badge/runtime-none-brightgreen)](https://github.com/alemora-dev/accord-cli)
 
-Accord is a small bash orchestrator for local multi-agent debate runs.
+**Permanent architectural decisions, not ephemeral chat opinions.**
 
-The coordinator, `codex` by default, does one shared web-research pass, writes a single research markdown file, then fans the same topic out to the available provider CLIs. Each provider writes an understanding note, an opinion, and one debate revision after reading peer opinions. The coordinator then writes the final synthesis.
+Accord runs a council of AI agents on any topic and writes the full debate — research, opinions, cross-examination, synthesis — as Markdown files you can commit to your repository. No Python. No runtime. One command.
 
-The prompt set is tuned for short, bullet-first artifacts so each file is easier to scan without turning the workflow into a rigid schema.
+---
+
+## Why Accord
+
+| | Accord | Ephemeral assistants |
+|---|---|---|
+| **Output** | Permanent `.md` files in `runs/` | Disappears when you close the chat |
+| **Install** | `curl -sSL https://get.accord.sh \| bash` | Python 3.10+ + uv + manual config |
+| **Runtime** | Zero — single binary | Requires runtime |
+| **LLMs** | Any CLI (codex, claude, gemini, custom) | Platform-specific |
+| **Teams** | Built-in specialist presets | Generic assistant |
+| **Open** | Edit prompts directly in `src/prompts/` | Black box |
 
 ---
 
 ## Quick Start
 
 ```bash
-# Install (one-time)
-ln -s "$PWD/bin/accord" /usr/local/bin/accord
+# Install (macOS / Linux)
+curl -sSL https://get.accord.sh | bash
 
 # Run a debate
-accord "Recent AI coding agents"
+accord "Should we migrate to a microservices architecture?"
+
+# Use a specialist team
+accord --team security "Review the new authentication flow"
+accord --team architecture "Evaluate the trade-offs of using Bun vs Node.js"
 ```
 
 ---
 
-## Pipeline
+## How It Works
 
+```mermaid
+graph TD
+    A[Topic] --> B[Shared Research]
+    B --> C{Parallel Deliberation}
+    C --> D[Claude]
+    C --> E[Gemini]
+    C --> F[Codex]
+    D & E & F --> G[Cross-Examination]
+    G --> H[Final Synthesis]
+    H --> I[runs/timestamp-slug/]
 ```
-  topic prompt
-       │
-       ▼
- ┌──────────────────┐
- │  shared research │  ← coordinator
- └────────┬─────────┘
-          │
-          ▼
- ┌──────────────────┐
- │  understanding   │  ← all debaters (parallel)
- └────────┬─────────┘
-          │
-          ▼
- ┌──────────────────┐
- │     opinion      │  ← all debaters (parallel)
- └────────┬─────────┘
-          │
-          ▼
- ┌──────────────────┐
- │     debate       │  ← all debaters (parallel, reads peers)
- └────────┬─────────┘
-          │
-          ▼
- ┌──────────────────┐
- │ final synthesis  │  ← coordinator
- └────────┬─────────┘
-          │
-          ▼
-  runs/<timestamp>-<slug>/
-```
+
+Five stages, all written to `runs/<timestamp>-<slug>/`:
+
+1. **Shared Research** — coordinator does one web-research pass
+2. **Understanding** — each debater extracts key facts
+3. **Opinion** — each debater gives an initial answer
+4. **Cross-Examination** — each debater reads peer opinions and revises
+5. **Final Synthesis** — coordinator writes the definitive summary
 
 ---
 
-## What You Get
+## Specialist Teams
 
-Each run produces a self-contained folder of markdown files:
+```bash
+accord --team security  "Evaluate the new login system"
+accord --team architecture "Assess the proposed monorepo structure"
+accord --team performance "Review the database query patterns"
+accord --team debug "Why is the payment service timing out?"
+```
+
+Each team injects a specialist persona into every debater stage. No new pipeline stages, no new config.
+
+---
+
+## Artifacts
+
+Every run writes a self-contained folder:
 
 ```
 runs/
-└── 2026-04-06T12-00-00Z-recent-ai/
-    ├── recent-ai_research_1.md
-    ├── recent-ai_claude_understanding_1.md
-    ├── recent-ai_claude_opinion_1.md
-    ├── recent-ai_claude_debate_1.md
-    ├── recent-ai_gemini_understanding_1.md
-    ├── recent-ai_gemini_opinion_1.md
-    ├── recent-ai_gemini_debate_1.md
-    ├── recent-ai_final_1.md
+└── 2026-04-06T12-00-00Z-should-we/
+    ├── should-we_research_1.md
+    ├── should-we_claude_understanding_1.md
+    ├── should-we_claude_opinion_1.md
+    ├── should-we_claude_debate_1.md
+    ├── should-we_gemini_understanding_1.md
+    ├── should-we_gemini_opinion_1.md
+    ├── should-we_gemini_debate_1.md
+    ├── should-we_final_1.md
     └── run_summary.md
 ```
 
-`run_summary.md` is a small transparency file with the coordinator, debaters, provider styles, artifact list, and placeholder token/cost fields.
-
-## Using Accord as a Skill (Claude / Gemini)
-
-Accord can be used directly as a skill within your AI agent (Claude Code or Gemini CLI). When invoked via `/accord`, the agent acts as the **Coordinator**, managing research and synthesis, and delegates only the debater roles to the binary.
-
-```bash
-# Run a debate where the current agent coordinates
-/accord "Topic"
-
-# Explicitly select debaters
-/accord --llms codex:debater,gemini:debater "Topic"
-```
-
-This mode allows the agent to provide its own research and final synthesis, keeping you in the same context for the entire debate run.
+Commit `runs/` to your repository. Review it in pull requests. Reference it in your ADRs.
 
 ---
 
-## Usage
+## Configuration
 
-Run the repo-local entrypoint:
-
-```bash
-./bin/accord "Recent AI coding agents"
-```
-
-Print the current release version:
-
-```bash
-./bin/accord --version
-```
-
-Generate the next semantic version or bump `VERSION` automatically:
-
-```bash
-./scripts/version.sh next patch
-./scripts/version.sh bump patch
-```
-
-Primary role-order configuration:
-
-```bash
-./bin/accord --llms codex:coordinator,claude:debater,gemini:debater "Best browser automation workflows"
-```
-
-Optional defaults file:
-
-```bash
-cat .accordrc
- # ACCORD_PROVIDERS=codex,claude,gemini
-# ACCORD_LLMS=codex:coordinator,claude:debater,gemini:debater
-```
-
-Legacy flags still work when `--llms` is omitted and no `.accordrc` is present:
-
-```bash
-./bin/accord --coordinator gemini --providers codex,gemini --output ./runs "Best browser automation workflows"
-```
-
-To expose it as `accord` on your shell path:
-
-```bash
-ln -s "$PWD/bin/accord" /usr/local/bin/accord
-```
-
----
-
-## Provider Contract
-
-Accord keeps a tiny provider contract in `.accordrc`:
-
-- `ACCORD_PROVIDERS=codex,claude,gemini`
-- `ACCORD_PROVIDER_<NAME>_STYLE=<codex|claude|gemini>`
-- `ACCORD_PROVIDER_<NAME>_BIN=<command>`
-
-That lets you define custom provider names while still reusing the built-in runner styles. Example:
+Custom providers via `.accordrc`:
 
 ```bash
 ACCORD_PROVIDERS=writer,critic
@@ -163,81 +111,29 @@ ACCORD_PROVIDER_CRITIC_BIN=gemini
 ACCORD_LLMS=writer:coordinator,critic:debater
 ```
 
-If no provider config is present, Accord defaults to:
-
-- `codex`
-- `claude`
-- `gemini`
-
-Legacy binary overrides still work for the built-in styles:
-
-- `ACCORD_CODEX_BIN`
-- `ACCORD_CLAUDE_BIN`
-- `ACCORD_GEMINI_BIN`
-
-If a provider is missing, Accord reports it and continues with the ones that are available. With role-based config, Accord keeps the configured coordinator when possible and otherwise falls back to the first available provider in the requested order.
-
----
-
-## Roles And Defaults
-
-Accord now supports a small role-aware config layer:
-
-- `--llms` accepts an ordered list like `codex:coordinator,claude:debater,gemini:debater`
-- `.accordrc` can define `ACCORD_LLMS=...` for repo defaults
-- `--llms` overrides `.accordrc`
-- coordinator and debaters are treated as separate roles by default
-- if the configured coordinator is unavailable, Accord promotes the first available provider and keeps going
-
----
-
-## Run Layout
-
-Each run writes to `runs/<timestamp>-<topic-slug>/`.
-
-Artifacts follow this shape:
-
-- `<topic>_research_1.md`
-- `<topic>_<provider>_understanding_1.md`
-- `<topic>_<provider>_opinion_1.md`
-- `<topic>_<provider>_debate_1.md`
-- `<topic>_final_1.md`
-- `run_summary.md`
-
-With the default `.accordrc`, `codex` coordinates and `claude` plus `gemini` produce the debater artifacts.
-
-Prompt assets and shell helpers live under [`accord/`](accord/).
-
-Release packaging is kept small on purpose:
+Role-based runs:
 
 ```bash
-./scripts/package.sh
+accord --llms codex:coordinator,claude:debater,gemini:debater "Best browser automation workflows"
 ```
-
-That writes a versioned tarball to `dist/`.
-
-Publishing can still be triggered manually:
-
-```bash
-git tag "v$(./scripts/version.sh current)"
-git push origin "v$(./scripts/version.sh current)"
-```
-
-That creates a GitHub Release with the tarball attached and publishes a matching package to GHCR.
-
-On normal merges to `main`, Accord now auto-tags the current version if that tag does not already exist, then runs the same release publishing flow.
 
 ---
 
 ## Development
 
-Smoke tests:
-
 ```bash
-bash tests/smoke.sh
+# Run tests
+bun test
+
+# Build binaries
+bun run scripts/build.ts
+
+# Run from source
+bun run src/main.ts "Topic"
 ```
 
-Core docs:
+Core docs: [`docs/architecture.md`](docs/architecture.md)
 
-- [`docs/architecture.md`](docs/architecture.md)
-- [`docs/testing.md`](docs/testing.md)
+---
+
+> *"Reliability comes from engineering discipline, not better prompts."*
