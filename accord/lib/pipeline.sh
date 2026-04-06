@@ -164,7 +164,10 @@ accord::parse_llms_spec() {
     esac
   done
 
-  [ -n "$coordinator" ] || accord::fail "LLM configuration requires one coordinator."
+  # If research and synthesis are skipped, the coordinator is optional
+  if [ "${ACCORD_SKIP_RESEARCH:-0}" = "0" ] || [ "${ACCORD_SKIP_SYNTHESIS:-0}" = "0" ]; then
+    [ -n "$coordinator" ] || accord::fail "LLM configuration requires one coordinator."
+  fi
   [ "${#debaters[@]}" -gt 0 ] || accord::fail "LLM configuration requires at least one debater."
 
   ACCORD_REQUESTED_PROVIDERS=("${requested[@]}")
@@ -365,6 +368,10 @@ accord::main() {
   local provider_lines=""
   local artifact_lines=""
 
+  local skip_research=0
+  local skip_synthesis=0
+  local custom_slug=""
+
   root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
   accord::load_runtime_config "$root"
 
@@ -392,6 +399,24 @@ accord::main() {
         [ "$#" -ge 2 ] || accord::fail "--output requires a value"
         output_root="$2"
         shift 2
+        ;;
+      --run-dir)
+        [ "$#" -ge 2 ] || accord::fail "--run-dir requires a value"
+        run_dir="$2"
+        shift 2
+        ;;
+      --slug)
+        [ "$#" -ge 2 ] || accord::fail "--slug requires a value"
+        custom_slug="$2"
+        shift 2
+        ;;
+      --skip-research)
+        skip_research=1
+        shift
+        ;;
+      --skip-synthesis)
+        skip_synthesis=1
+        shift
         ;;
       --version)
         accord::version
@@ -439,6 +464,8 @@ accord::main() {
   fi
 
   if [ -n "$llms_spec" ]; then
+    export ACCORD_SKIP_RESEARCH="$skip_research"
+    export ACCORD_SKIP_SYNTHESIS="$skip_synthesis"
     accord::parse_llms_spec "$llms_spec"
     accord::resolve_llm_roles "${ACCORD_REQUESTED_PROVIDERS[@]}"
     coordinator="$ACCORD_ACTIVE_COORDINATOR"
@@ -466,11 +493,23 @@ accord::main() {
     active=("${available[@]}")
   fi
 
-  timestamp="$(accord::timestamp)"
-  slug="$(accord::topic_slug "$prompt")"
-  [ -n "$slug" ] || slug="topic"
-
-  run_dir="$output_root/$timestamp-$slug"
+  if [ -z "$run_dir" ]; then
+    timestamp="$(accord::timestamp)"
+    if [ -n "$custom_slug" ]; then
+      slug="$custom_slug"
+    else
+      slug="$(accord::topic_slug "$prompt")"
+    fi
+    [ -n "$slug" ] || slug="topic"
+    run_dir="$output_root/$timestamp-$slug"
+  else
+    if [ -n "$custom_slug" ]; then
+      slug="$custom_slug"
+    else
+      slug="$(accord::topic_slug "$prompt")"
+    fi
+    [ -n "$slug" ] || slug="topic"
+  fi
   mkdir -p "$run_dir"
 
   accord::log "Run directory: $run_dir"
@@ -480,13 +519,15 @@ accord::main() {
   research_file="$(accord::artifact_path "$run_dir" "$slug" "research_1")"
   final_file="$(accord::artifact_path "$run_dir" "$slug" "final_1")"
 
-  if ! accord::run_provider \
-    "$coordinator" \
-    "$(accord::shared_research_prompt "$root" "$prompt" "$slug")" \
-    "$research_file" \
-    "shared_research" \
-    "$run_dir"; then
-    accord::fail "Coordinator $coordinator failed during shared research."
+  if [ "$skip_research" = "0" ]; then
+    if ! accord::run_provider \
+      "$coordinator" \
+      "$(accord::shared_research_prompt "$root" "$prompt" "$slug")" \
+      "$research_file" \
+      "shared_research" \
+      "$run_dir"; then
+      accord::fail "Coordinator $coordinator failed during shared research."
+    fi
   fi
   accord::run_stage_for_providers understanding "$run_dir" "$root" "$prompt" "$slug" "$research_file" "${active[@]}"
   active=()
@@ -516,16 +557,21 @@ accord::main() {
     fi
   done
 
-  if ! accord::run_provider \
-    "$coordinator" \
-    "$(accord::final_synthesis_prompt "$root" "$prompt" "$slug" "$coordinator" "$research_file" "${artifact_files[@]}")" \
-    "$final_file" \
-    "final_synthesis" \
-    "$run_dir"; then
-    accord::fail "Coordinator $coordinator failed during final synthesis."
+  if [ "$skip_synthesis" = "0" ]; then
+    if ! accord::run_provider \
+      "$coordinator" \
+      "$(accord::final_synthesis_prompt "$root" "$prompt" "$slug" "$coordinator" "$research_file" "${artifact_files[@]}")" \
+      "$final_file" \
+      "final_synthesis" \
+      "$run_dir"; then
+      accord::fail "Coordinator $coordinator failed during final synthesis."
+    fi
   fi
 
-  artifact_files+=("$final_file")
+  # Always include final file in summary if it exists (might have been created by manual coordinator)
+  if [ -f "$final_file" ]; then
+    artifact_files+=("$final_file")
+  fi
   provider_lines="$coordinator"
   for provider in "${active[@]}"; do
     if [ "$provider" != "$coordinator" ]; then
