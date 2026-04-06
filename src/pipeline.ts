@@ -163,11 +163,12 @@ export async function runAccord(opts: RunOptions): Promise<string> {
     if (activeDebaters.length === 0) fail('No debaters are available to run.');
   } else {
     const requestedProviders = providersCSV.split(',').map(p => p.trim()).filter(Boolean);
-    const { available, missing } = await resolveAvailableProviders(requestedProviders);
+    const toCheck = [...new Set([coordinatorOpt, ...requestedProviders])];
+    const { available, missing } = await resolveAvailableProviders(toCheck);
     if (missing.length > 0) log(`Missing providers: ${missing.join(', ')}`);
     if (available.length === 0) fail('No providers are available to run.');
     coordinator = pickCoordinator(coordinatorOpt, coordinatorExplicit, available);
-    activeDebaters = available;
+    activeDebaters = requestedProviders.filter(p => available.includes(p));
   }
 
   const slug = customSlug ?? topicSlug(topic);

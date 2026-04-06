@@ -41,7 +41,7 @@ export function log(message: string): void {
 }
 
 export function fail(message: string): never {
-  log(message);
+  process.stderr.write(`[accord] ${message}\n`);
   process.exit(1);
 }
 

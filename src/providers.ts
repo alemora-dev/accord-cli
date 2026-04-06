@@ -58,9 +58,10 @@ export function providerSupported(name: string): boolean {
 }
 
 export async function providerAvailable(name: string): Promise<boolean> {
+  const cmd = providerCommand(name);
   try {
-    const cmd = providerCommand(name);
-    const proc = Bun.spawn(['which', cmd], { stdout: 'ignore', stderr: 'ignore' });
+    // Use shell which to ensure PATH resolution
+    const proc = Bun.spawn(['bash', '-c', `which ${cmd}`], { stdout: 'ignore', stderr: 'ignore' });
     return (await proc.exited) === 0;
   } catch {
     return false;
@@ -95,16 +96,18 @@ export async function runProvider(
   if (style === 'codex') {
     const baseArgs = ['--skip-git-repo-check', '-C', runDir, '-o', outputFile, prompt];
     const args = mode === 'shared_research' ? ['--search', 'exec', ...baseArgs] : ['exec', ...baseArgs];
-    proc = Bun.spawn([cmd, ...args], { stdout: 'ignore', stderr: 'inherit' });
+    proc = Bun.spawn([cmd, ...args], { stdout: 'ignore', stderr: 'inherit', stdin: 'ignore' });
   } else if (style === 'claude') {
     proc = Bun.spawn([cmd, '-p', '--output-format', 'text', prompt], {
       stdout: Bun.file(outputFile),
       stderr: 'inherit',
+      stdin: 'ignore',
     });
   } else if (style === 'gemini') {
     proc = Bun.spawn([cmd, '-p', prompt], {
       stdout: Bun.file(outputFile),
       stderr: 'inherit',
+      stdin: 'ignore',
     });
   } else {
     fail(`Unsupported provider style: ${style}`);
