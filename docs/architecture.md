@@ -4,14 +4,14 @@
 
 Accord is intentionally small:
 
-- [`bin/accord`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/bin/accord) is the entrypoint
-- [`accord/lib/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord/lib) contains the shell helpers
-- [`accord/prompts/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord/prompts) contains the stage-specific prompt assets
-- [`VERSION`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/VERSION) is the single source of truth for release versioning
-- [`scripts/version.sh`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/scripts/version.sh) reads and bumps the semantic version
-- [`scripts/package.sh`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/scripts/package.sh) creates a small release archive in `dist/`
-- [`.github/workflows/auto-tag.yml`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/.github/workflows/auto-tag.yml) auto-tags new versions on `main`
-- [`.github/workflows/release.yml`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/.github/workflows/release.yml) publishes tagged releases to GitHub Releases and GHCR
+- [`bin/accord`](/bin/accord) is the entrypoint
+- [`accord/lib/`](/accord/lib) contains the shell helpers
+- [`accord/prompts/`](/accord/prompts) contains the stage-specific prompt assets
+- [`VERSION`](/VERSION) is the single source of truth for release versioning
+- [`scripts/version.sh`](/scripts/version.sh) reads and bumps the semantic version
+- [`scripts/package.sh`](/scripts/package.sh) creates a small release archive in `dist/`
+- [`.github/workflows/auto-tag.yml`](/.github/workflows/auto-tag.yml) auto-tags new versions on `main`
+- [`.github/workflows/release.yml`](/.github/workflows/release.yml) publishes tagged releases to GitHub Releases and GHCR
 - `runs/` stores generated markdown artifacts for each execution
 
 There is no session model, build step, or internal TypeScript domain layer anymore. The behavior is the shell pipeline.
@@ -71,7 +71,7 @@ Rules:
 
 ## Prompt Strategy
 
-Each stage has a versioned markdown prompt file in [`accord/prompts/`](/Users/diegoamaya/Documents/ale_mora/projects/accord-cli/accord/prompts). The runtime appends stage metadata plus the relevant artifact contents:
+Each stage has a versioned markdown prompt file in [`accord/prompts/`](/accord/prompts). The runtime appends stage metadata plus the relevant artifact contents:
 
 - topic
 - topic slug
