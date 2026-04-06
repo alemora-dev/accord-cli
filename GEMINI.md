@@ -51,15 +51,19 @@ bash -n bin/accord accord/lib/*.sh tests/smoke.sh
 
 | File | Purpose |
 |------|---------|
-| `bin/accord` | Entrypoint; sources all lib files and calls `accord::main` |
-| `accord/lib/common.sh` | Utilities: slugify, timestamp, `accord::prompt_mode` |
-| `accord/lib/providers.sh` | Provider resolution, style lookup, command dispatch |
-| `accord/lib/pipeline.sh` | Stage orchestration, coordinator fallback, `accord::main` |
-| `accord/lib/prompts.sh` | Prompt construction per stage, template path resolution |
-| `accord/prompts/*.md` | Prompt templates — compact and detailed pairs per stage |
-| `tests/smoke.sh` | Full behavior coverage via fake provider shims |
+| `src/main.ts` | CLI entrypoint; arg parsing, wires all modules |
+| `src/pipeline.ts` | 5-stage orchestration, coordinator fallback, parallel stages |
+| `src/providers.ts` | Provider resolution, availability check, spawn dispatch |
+| `src/prompts.ts` | Prompt string builders, template loading |
+| `src/artifacts.ts` | Run dir creation, artifact path helpers, run_summary |
+| `src/teams.ts` | Team preset definitions and persona prefix loader |
+| `src/common.ts` | Utilities: slugify, timestamp, promptMode, log, fail |
+| `src/config.ts` | `.accordrc` loader |
+| `src/prompts/*.md` | Prompt templates — compact and detailed pairs per stage |
+| `src/teams/*.md` | Team persona files — one per preset |
+| `tests/accord.test.ts` | Full integration test suite (Bun test runner) |
+| `scripts/build.ts` | Cross-platform `bun build --compile` |
 | `docs/architecture.md` | Pipeline and release flow in detail |
-| `docs/testing.md` | Test philosophy and manual verification steps |
 
 ## Stage Pipeline
 
@@ -108,11 +112,11 @@ Detailed mode causes `accord::template_path` to load `<name>.detailed.md` instea
 
 ## Coding Style
 
-- POSIX-friendly Bash, `#!/usr/bin/env bash`, `set -euo pipefail`
-- Function naming: `accord::name`
-- Two-space indentation inside functions
-- Fully quoted variable expansions
-- Local variables declared with `local`
+- TypeScript strict mode, ESNext modules
+- `import` paths use `.ts` extension explicitly
+- Function naming: camelCase
+- Two-space indentation
+- Explicit return types on exported functions
 - Conventional Commit prefixes: `feat:`, `fix:`, `docs:`, `ci:`
 
 ## KISS Policy
