@@ -1,13 +1,13 @@
-# Accord — Claude Code Session Notes
+# Accord — Gemini CLI Session Notes
 
-> **Note:** Keep this file in sync with `GEMINI.md` for any core logic changes (Key Files, Stage Pipeline, etc.).
+> **Note:** Keep this file in sync with `CLAUDE.md` for any core logic changes (Key Files, Stage Pipeline, etc.).
 
 Accord is a pure-bash orchestrator for local multi-agent debates.
  There is no build step and no compile phase. The product is the shell pipeline in `accord/lib/`.
 
 ## The /accord Skill
 
-The primary way to run debates within Claude is via the `/accord` skill. This skill allows the Claude agent to act as the **Coordinator** while delegating debater roles to the binary.
+The primary way to run debates within Gemini is via the `/accord` skill. This skill allows the Gemini agent to act as the **Coordinator** while delegating debater roles to the binary.
 
 ```bash
 /accord "Topic"
