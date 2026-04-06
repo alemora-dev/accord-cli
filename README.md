@@ -73,7 +73,7 @@ runs/
     ├── recent-ai_gemini_understanding_1.md
     ├── recent-ai_gemini_opinion_1.md
     ├── recent-ai_gemini_debate_1.md
-    ├── recent-ai_codex_final_1.md
+    ├── recent-ai_final_1.md
     └── run_summary.md
 ```
 
