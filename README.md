@@ -79,6 +79,20 @@ runs/
 
 `run_summary.md` is a small transparency file with the coordinator, debaters, provider styles, artifact list, and placeholder token/cost fields.
 
+## Using Accord as a Skill (Claude / Gemini)
+
+Accord can be used directly as a skill within your AI agent (Claude Code or Gemini CLI). When invoked via `/accord`, the agent acts as the **Coordinator**, managing research and synthesis, and delegates only the debater roles to the binary.
+
+```bash
+# Run a debate where the current agent coordinates
+/accord "Topic"
+
+# Explicitly select debaters
+/accord --llms codex:debater,gemini:debater "Topic"
+```
+
+This mode allows the agent to provide its own research and final synthesis, keeping you in the same context for the entire debate run.
+
 ---
 
 ## Usage

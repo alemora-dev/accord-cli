@@ -57,6 +57,35 @@ All variables can be set in `.accordrc` or in the shell environment. The config 
 
 `--llms` on the command line takes precedence over `ACCORD_LLMS` in `.accordrc`. Legacy `--coordinator` and `--providers` flags are still accepted but only apply when `--llms` is absent and no `.accordrc` LLMS entry is set.
 
+## Accord Skill for Agents (Claude/Gemini)
+
+The `/accord` skill allows the current agent to orchestrate a multi-agent debate. By default, the agent acts as the **Coordinator**, managing high-level research and final synthesis, while delegating the debater roles to the `accord` binary.
+
+### Manual Coordination Mode (Agent-Driven)
+
+In this mode, the agent performing the skill is the source of truth for the coordinator stages.
+
+1.  **Shared Research**: The agent reads the research prompt, generates the content, and writes it to the run directory.
+2.  **Debater Delegation**: The agent calls `./bin/accord` with the following flags to skip its internal coordination stages:
+    - `--run-dir <dir>`: Uses the directory created by the agent.
+    - `--slug <slug>`: Uses the same filename slug as the agent.
+    - `--skip-research`: Tells the binary NOT to run its own research stage.
+    - `--skip-synthesis`: Tells the binary NOT to run its own synthesis stage.
+3.  **Final Synthesis**: After the binary completes the debater stages, the agent reads all outputs and generates the final synthesis.
+
+### Example Command for Agents
+
+```bash
+./bin/accord --run-dir "runs/2026-04-06-topic" --slug "topic" --skip-research --skip-synthesis --llms "codex:debater,gemini:debater" "My Topic"
+```
+
+### Running as a Subagent
+
+The `/accord` skill is fully compatible with background subagents. When a subagent is started to run a debate:
+- The subagent becomes the "Coordinator".
+- It handles the research and synthesis in its own session context.
+- It reports the final synthesis result back to the main agent upon completion.
+
 ## Stage Pipeline and Artifact Naming
 
 Five stages run in order for each debate:
