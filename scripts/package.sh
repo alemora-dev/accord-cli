@@ -4,14 +4,18 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="$("$ROOT/scripts/version.sh" current)"
 DIST_DIR="${ACCORD_DIST_DIR:-$ROOT/dist}"
-STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/accord-package.XXXXXX")"
-PACKAGE_ROOT="$STAGING_DIR/accord-$VERSION"
-ARCHIVE="$DIST_DIR/accord-$VERSION.tar.gz"
-
-trap 'rm -rf "$STAGING_DIR"' EXIT
 
 mkdir -p "$DIST_DIR"
-mkdir -p "$PACKAGE_ROOT"
-cp -R "$ROOT/bin" "$ROOT/accord" "$ROOT/README.md" "$ROOT/docs" "$ROOT/VERSION" "$PACKAGE_ROOT/"
-tar -czf "$ARCHIVE" -C "$STAGING_DIR" "accord-$VERSION"
-printf '%s\n' "$ARCHIVE"
+
+# Package each platform binary into its own tar.gz
+for binary in "$DIST_DIR"/accord-*; do
+  [ -f "$binary" ] || continue
+  name="$(basename "$binary")"
+  archive="$DIST_DIR/$name-$VERSION.tar.gz"
+  staging="$(mktemp -d "${TMPDIR:-/tmp}/accord-package.XXXXXX")"
+  trap 'rm -rf "$staging"' EXIT
+  cp "$binary" "$staging/accord"
+  cp "$ROOT/README.md" "$ROOT/VERSION" "$staging/"
+  tar -czf "$archive" -C "$staging" .
+  printf '%s\n' "$archive"
+done

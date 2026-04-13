@@ -15,7 +15,7 @@ Accord runs a council of AI agents on any topic and writes the full debate — r
 | | Accord | Ephemeral assistants |
 |---|---|---|
 | **Output** | Permanent `.md` files in `runs/` | Disappears when you close the chat |
-| **Install** | `curl -sSL https://get.accord.sh \| bash` | Python 3.10+ + uv + manual config |
+| **Install** | Download binary from [Releases](https://github.com/alemora-dev/accord-cli/releases) | Python 3.10+ + uv + manual config |
 | **Runtime** | Zero — single binary | Requires runtime |
 | **LLMs** | Any CLI (codex, claude, gemini, custom) | Platform-specific |
 | **Teams** | Built-in specialist presets | Generic assistant |
@@ -23,12 +23,29 @@ Accord runs a council of AI agents on any topic and writes the full debate — r
 
 ---
 
+## Install
+
+**Option 1 — Download a pre-built binary** (macOS / Linux):
+
+```bash
+# Replace <platform> with: darwin-arm64, darwin-x64, linux-x64, or linux-arm64
+curl -L https://github.com/alemora-dev/accord-cli/releases/latest/download/accord-<platform>-2.0.0.tar.gz | tar -xz
+sudo mv accord /usr/local/bin/accord
+```
+
+**Option 2 — Build from source** (requires [Bun](https://bun.sh)):
+
+```bash
+git clone https://github.com/alemora-dev/accord-cli.git
+cd accord-cli
+bun install
+bun run scripts/build.ts          # writes binaries to dist/
+sudo cp dist/accord-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/') /usr/local/bin/accord
+```
+
 ## Quick Start
 
 ```bash
-# Install (macOS / Linux)
-curl -sSL https://get.accord.sh | bash
-
 # Run a debate
 accord "Should we migrate to a microservices architecture?"
 
@@ -65,42 +82,106 @@ Five stages, all written to `runs/<timestamp>-<slug>/`:
 
 ## Specialist Teams
 
+Built-in teams inject a shared specialist persona into every debater stage. No extra config.
+
+### Security review
 ```bash
-accord --team security  "Evaluate the new login system"
-accord --team architecture "Assess the proposed monorepo structure"
-accord --team performance "Review the database query patterns"
-accord --team debug "Why is the payment service timing out?"
+# Evaluate a new feature for vulnerabilities
+accord --team security "Review the new OAuth2 login flow"
+
+# Audit a third-party dependency before adopting it
+accord --team security "Should we adopt Prisma for ORM?"
+
+# Red-team a proposed API design
+accord --team security "Is our API key rotation scheme safe?"
 ```
 
-Each team injects a specialist persona into every debater stage. No new pipeline stages, no new config.
+### Architecture
+```bash
+# Weigh a major structural change
+accord --team architecture "Monorepo vs polyrepo for our three services"
+
+# Evaluate a framework migration
+accord --team architecture "Migrate from Express to Fastify"
+
+# Design a new subsystem
+accord --team architecture "How should we structure the plugin system?"
+```
+
+### Performance
+```bash
+# Profile a bottleneck before optimizing
+accord --team performance "Why is the checkout page slow on mobile?"
+
+# Choose between two implementations
+accord --team performance "Redis pub/sub vs Kafka for our event pipeline"
+
+# Review a query before it ships
+accord --team performance "Evaluate the new dashboard aggregation query"
+```
+
+### Debug
+```bash
+# Trace an incident with multiple theories
+accord --team debug "Why is the payment service timing out under load?"
+
+# Investigate a flaky test
+accord --team debug "Test suite fails 1-in-10 runs in CI"
+
+# Root-cause a production regression
+accord --team debug "Memory leak introduced in v3.2.1"
+```
+
+---
+
+## Choosing LLMs
+
+Override the default provider set with `--llms`:
+
+```bash
+# Three-way debate with explicit roles
+accord --llms codex:coordinator,claude:debater,gemini:debater \
+  "Best browser automation workflows"
+
+# Two debaters, no Gemini
+accord --llms claude:coordinator,codex:debater \
+  "Should we add an event sourcing layer?"
+
+# Combine a team preset with a custom LLM set
+accord --team security \
+  --llms claude:coordinator,gemini:debater,codex:debater \
+  "Evaluate the new authentication middleware"
+```
 
 ---
 
 ## Artifacts
 
-Every run writes a self-contained folder:
+Every run produces a self-contained folder you can commit alongside your code:
 
 ```
 runs/
-└── 2026-04-06T12-00-00Z-should-we/
-    ├── should-we_research_1.md
-    ├── should-we_claude_understanding_1.md
-    ├── should-we_claude_opinion_1.md
-    ├── should-we_claude_debate_1.md
-    ├── should-we_gemini_understanding_1.md
-    ├── should-we_gemini_opinion_1.md
-    ├── should-we_gemini_debate_1.md
-    ├── should-we_final_1.md
-    └── run_summary.md
+└── 2026-04-13T19-04-07Z-best-browser/
+    ├── best-browser_research_1.md          ← shared research (coordinator)
+    ├── best-browser_claude_understanding_1.md
+    ├── best-browser_claude_opinion_1.md
+    ├── best-browser_claude_debate_1.md
+    ├── best-browser_gemini_understanding_1.md
+    ├── best-browser_gemini_opinion_1.md
+    ├── best-browser_gemini_debate_1.md
+    ├── best-browser_final_1.md             ← authoritative synthesis
+    └── run_summary.md                      ← metadata + quick verdict
 ```
+
+See [`examples/best-browser-automation/`](examples/best-browser-automation/) for a real run output.
 
 Commit `runs/` to your repository. Review it in pull requests. Reference it in your ADRs.
 
 ---
 
-## Configuration
+## Custom Providers
 
-Custom providers via `.accordrc`:
+Wire any CLI that can read a prompt from stdin into `.accordrc`:
 
 ```bash
 ACCORD_PROVIDERS=writer,critic
@@ -109,12 +190,6 @@ ACCORD_PROVIDER_WRITER_BIN=codex
 ACCORD_PROVIDER_CRITIC_STYLE=gemini
 ACCORD_PROVIDER_CRITIC_BIN=gemini
 ACCORD_LLMS=writer:coordinator,critic:debater
-```
-
-Role-based runs:
-
-```bash
-accord --llms codex:coordinator,claude:debater,gemini:debater "Best browser automation workflows"
 ```
 
 ---
