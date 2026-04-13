@@ -2,8 +2,7 @@
 
 > **Note:** Keep this file in sync with `GEMINI.md` for any core logic changes (Key Files, Stage Pipeline, etc.).
 
-Accord is a pure-bash orchestrator for local multi-agent debates.
- There is no build step and no compile phase. The product is the shell pipeline in `accord/lib/`.
+Accord is a TypeScript CLI orchestrator for local multi-agent debates, compiled to a self-contained binary via `bun build --compile`. The source lives in `src/`.
 
 ## The /accord Skill
 
@@ -22,30 +21,30 @@ The agent will:
 ## Running and Testing
 
 ```bash
-# Full smoke suite (uses fake provider shims — no real CLIs needed)
-bash tests/smoke.sh
+# Full integration test suite (uses fake provider shims — no real CLIs needed)
+bun test
 
-# Fastest syntax check before committing
-bash -n bin/accord accord/lib/*.sh tests/smoke.sh
+# Type check
+bun run tsc --noEmit
 
 # Live run (requires at least one provider CLI on PATH)
-./bin/accord "Recent AI coding agents"
+bun run src/main.ts "Recent AI coding agents"
 
 # Role-based run
-./bin/accord --llms codex:coordinator,claude:debater,gemini:debater "Best browser automation workflows"
+bun run src/main.ts --llms codex:coordinator,claude:debater,gemini:debater "Best browser automation workflows"
 
 # Print version
-./bin/accord --version
+bun run src/main.ts --version
 
-# Build release archive
-./scripts/package.sh
+# Build release binaries (darwin-arm64/x64, linux-x64/arm64)
+bun run scripts/build.ts
 ```
 
 ## Do Not Touch
 
 - `runs/` — generated debate output, never hand-edited source
-- `dist/` — release archives built by `scripts/package.sh`
-- `node_modules/` — no Node dependencies; presence indicates something wrong
+- `dist/` — release binaries built by `bun run scripts/build.ts`
+- `node_modules/` — managed by Bun; contains `bun-types` dev dependency
 
 ## Key Files
 
@@ -121,4 +120,4 @@ Detailed mode causes `accord::template_path` to load `<name>.detailed.md` instea
 
 ## KISS Policy
 
-Keep Accord small and inspectable. Prefer the smallest bash change that improves behavior. Avoid framework-style abstractions and new modes or knobs unless clearly necessary. Prompt logic should stay readable enough to audit from the repo.
+Keep Accord small and inspectable. Prefer the smallest change that improves behavior. Avoid framework-style abstractions and new modes or knobs unless clearly necessary. Prompt logic should stay readable enough to audit from the repo.

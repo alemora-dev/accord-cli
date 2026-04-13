@@ -1,3 +1,4 @@
+import { statSync } from 'node:fs';
 import { promptMode, readFileOr, type PromptMode } from './common.ts';
 
 async function loadTemplate(name: string, mode: PromptMode): Promise<string> {
@@ -119,7 +120,7 @@ export async function finalSynthesisPrompt(
 
   const artifactSection = artifactFiles
     .filter(f => {
-      try { return Bun.fileSync(f).size > 0; } catch { return false; }
+      try { return statSync(f).size > 0; } catch { return false; }
     })
     .map(f => `\n### ${f.split('/').pop()}\n${readFileOr(f)}`)
     .join('\n');

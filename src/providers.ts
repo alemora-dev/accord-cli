@@ -57,24 +57,19 @@ export function providerSupported(name: string): boolean {
   return providerStyleSupported(style);
 }
 
-export async function providerAvailable(name: string): Promise<boolean> {
+export function providerAvailable(name: string): boolean {
   const cmd = providerCommand(name);
-  try {
-    // Use shell which to ensure PATH resolution
-    const proc = Bun.spawn(['bash', '-c', `which ${cmd}`], { stdout: 'ignore', stderr: 'ignore' });
-    return (await proc.exited) === 0;
-  } catch {
-    return false;
-  }
+  return Bun.which(cmd) !== null;
 }
 
-export async function resolveAvailableProviders(
+export function resolveAvailableProviders(
   providers: string[]
-): Promise<{ available: string[]; missing: string[] }> {
-  const checks = await Promise.all(providers.map(p => providerAvailable(p)));
+): { available: string[]; missing: string[] } {
   const available: string[] = [];
   const missing: string[] = [];
-  providers.forEach((p, i) => (checks[i] ? available : missing).push(p));
+  for (const p of providers) {
+    (providerAvailable(p) ? available : missing).push(p);
+  }
   return { available, missing };
 }
 

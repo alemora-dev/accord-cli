@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 export type PromptMode = 'compact' | 'detailed';
 
 const DETAILED_KEYWORDS = [
@@ -47,7 +49,7 @@ export function fail(message: string): never {
 
 export function readFileOr(path: string, fallback = ''): string {
   try {
-    return Bun.fileSync(path).text();
+    return readFileSync(path, 'utf-8');
   } catch {
     return fallback;
   }

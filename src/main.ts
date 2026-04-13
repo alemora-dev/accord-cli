@@ -26,7 +26,7 @@ async function main(): Promise<void> {
 
   let coordinator = 'codex';
   let coordinatorExplicit = false;
-  let providersCSV = 'codex,claude,gemini';
+  let providersCSV = process.env.ACCORD_PROVIDERS ?? 'codex,claude,gemini';
   let llmsSpec = '';
   let outputRoot = 'runs';
   let runDir = '';

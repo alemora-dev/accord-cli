@@ -1,5 +1,5 @@
 import { log, fail, topicSlug, timestamp } from './common.ts';
-import { resolveAvailableProviders, runProvider, providerSupported, configuredProviderNames } from './providers.ts';
+import { resolveAvailableProviders, runProvider, providerSupported } from './providers.ts';
 import {
   sharedResearchPrompt,
   providerUnderstandingPrompt,
@@ -153,7 +153,7 @@ export async function runAccord(opts: RunOptions): Promise<string> {
 
   if (llmsSpec) {
     const parsed = parseLlmsSpec(llmsSpec);
-    const { available, missing } = await resolveAvailableProviders(parsed.requested);
+    const { available, missing } = resolveAvailableProviders(parsed.requested);
     if (missing.length > 0) log(`Missing providers: ${missing.join(', ')}`);
     coordinator = pickCoordinator(parsed.coordinator, true, available);
     activeDebaters = parsed.debaters.filter(p => available.includes(p));
@@ -164,7 +164,7 @@ export async function runAccord(opts: RunOptions): Promise<string> {
   } else {
     const requestedProviders = providersCSV.split(',').map(p => p.trim()).filter(Boolean);
     const toCheck = [...new Set([coordinatorOpt, ...requestedProviders])];
-    const { available, missing } = await resolveAvailableProviders(toCheck);
+    const { available, missing } = resolveAvailableProviders(toCheck);
     if (missing.length > 0) log(`Missing providers: ${missing.join(', ')}`);
     if (available.length === 0) fail('No providers are available to run.');
     coordinator = pickCoordinator(coordinatorOpt, coordinatorExplicit, available);

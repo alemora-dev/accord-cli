@@ -38,10 +38,11 @@ async function runAccord(
 }
 
 describe('version flag', () => {
-  test('prints 2.0.0 and help mentions --version', async () => {
+  test('prints current version and help mentions --version', async () => {
+    const expectedVersion = readFileSync(join(ROOT, 'VERSION'), 'utf-8').trim();
     const { stdout, exitCode } = await runAccord({}, '--version');
     expect(exitCode).toBe(0);
-    expect(stdout).toBe('2.0.0');
+    expect(stdout).toBe(expectedVersion);
 
     const help = await runAccord({}, '--help');
     expect(help.stdout).toContain('--version');
