@@ -1,4 +1,5 @@
 import { mkdirSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { providerStyle } from './providers.ts';
 
 export function artifactPath(runDir: string, slug: string, suffix: string): string {
@@ -48,7 +49,7 @@ export async function writeRunSummary(
     artifactLines,
   ].join('\n') + '\n';
 
-  await Bun.write(summaryFile, content);
+  await writeFile(summaryFile, content);
 }
 
 export function collectPeerOpinionFiles(
