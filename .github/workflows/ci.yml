@@ -17,17 +17,25 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Verify shell syntax
-        run: bash -n bin/accord accord/lib/common.sh accord/lib/pipeline.sh accord/lib/prompts.sh accord/lib/providers.sh scripts/version.sh tests/smoke.sh
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
-      - name: Run smoke suite
-        run: bash tests/smoke.sh
+      - name: Install dependencies
+        run: bun install
 
-      - name: Run release packaging
-        run: bash scripts/package.sh
+      - name: Run unit tests
+        run: bun test tests/common.test.ts tests/providers.test.ts tests/prompts.test.ts tests/artifacts.test.ts tests/teams.test.ts
 
-      - name: Upload release archive
+      - name: Run integration tests
+        run: bun test tests/accord.test.ts
+
+      - name: Build binaries
+        run: bun run scripts/build.ts
+
+      - name: Upload release archives
         uses: actions/upload-artifact@v4
         with:
-          name: accord-package
-          path: dist/accord-*.tar.gz
+          name: accord-binaries
+          path: dist/accord-*
