@@ -37,13 +37,21 @@ jobs:
 
           echo "VERSION=$version" >> "$GITHUB_ENV"
 
-      - name: Verify shell syntax
-        run: bash -n bin/accord accord/lib/common.sh accord/lib/pipeline.sh accord/lib/prompts.sh accord/lib/providers.sh tests/smoke.sh
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
-      - name: Run smoke suite
-        run: bash tests/smoke.sh
+      - name: Install dependencies
+        run: bun install
 
-      - name: Build release archive
+      - name: Run tests
+        run: bun test
+
+      - name: Build binaries
+        run: bun run scripts/build.ts
+
+      - name: Build release archives
         run: bash scripts/package.sh
 
       - name: Create GitHub Release
@@ -64,7 +72,10 @@ jobs:
         run: |
           owner="$(printf '%s' "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
           image="ghcr.io/$owner/accord-cli"
-          archive="dist/accord-${VERSION}.tar.gz"
 
-          oras push "$image:v${VERSION}" \
-            "$archive:application/vnd.accord.release.v1+tar+gzip"
+          args=()
+          for archive in dist/accord-*-"${VERSION}".tar.gz; do
+            args+=("$archive:application/vnd.accord.release.v1+tar+gzip")
+          done
+
+          oras push "$image:v${VERSION}" "${args[@]}"
