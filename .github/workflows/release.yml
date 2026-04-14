@@ -71,6 +71,6 @@ jobs:
           cp dist/accord.js npm/accord.js
           cd npm
           npm version "$VERSION" --no-git-tag-version
-          npm publish --access public
+          npm publish --access public --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
