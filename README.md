@@ -82,53 +82,52 @@ Five stages, all written to `runs/<timestamp>-<slug>/`:
 
 ## Specialist Teams
 
-Built-in teams inject a shared specialist persona into every debater stage. No extra config.
+Teams inject a specialist persona into every debater stage, focusing the debate on what matters most for that context. No extra config — one flag.
 
-### Security review
+| Team | Each debater focuses on |
+|---|---|
+| `security` | Threat vectors, attack surfaces, auth risks, compliance |
+| `architecture` | Structural trade-offs, scalability, coupling, long-term consequences |
+| `performance` | Latency, throughput, memory, bottlenecks, cost at scale |
+| `debug` | Root cause, evidence, minimal fix — no speculation |
+
+### `--team security`
+
+Every debater approaches the topic as a security analyst: what could go wrong, what's the attack surface, what are the compliance implications.
+
 ```bash
-# Evaluate a new feature for vulnerabilities
 accord --team security "Review the new OAuth2 login flow"
-
-# Audit a third-party dependency before adopting it
 accord --team security "Should we adopt Prisma for ORM?"
-
-# Red-team a proposed API design
 accord --team security "Is our API key rotation scheme safe?"
 ```
 
-### Architecture
+### `--team architecture`
+
+Every debater approaches the topic as a system architect: structural trade-offs, scalability, coupling between components, and the long-term cost of the decision.
+
 ```bash
-# Weigh a major structural change
 accord --team architecture "Monorepo vs polyrepo for our three services"
-
-# Evaluate a framework migration
 accord --team architecture "Migrate from Express to Fastify"
-
-# Design a new subsystem
 accord --team architecture "How should we structure the plugin system?"
 ```
 
-### Performance
+### `--team performance`
+
+Every debater approaches the topic as a performance engineer: latency, throughput, memory pressure, and quantified impact at scale.
+
 ```bash
-# Profile a bottleneck before optimizing
 accord --team performance "Why is the checkout page slow on mobile?"
-
-# Choose between two implementations
 accord --team performance "Redis pub/sub vs Kafka for our event pipeline"
-
-# Review a query before it ships
 accord --team performance "Evaluate the new dashboard aggregation query"
 ```
 
-### Debug
+### `--team debug`
+
+Every debater approaches the topic as a root cause analyst: what is actually broken, what evidence supports each hypothesis, what is the minimal fix. Speculation without evidence is flagged.
+
 ```bash
-# Trace an incident with multiple theories
 accord --team debug "Why is the payment service timing out under load?"
-
-# Investigate a flaky test
 accord --team debug "Test suite fails 1-in-10 runs in CI"
-
-# Root-cause a production regression
 accord --team debug "Memory leak introduced in v3.2.1"
 ```
 
