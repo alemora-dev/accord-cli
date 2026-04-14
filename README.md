@@ -37,12 +37,21 @@ accord "Should we migrate to microservices?"
 ## Quick Start
 
 ```bash
-# Run a debate
+# Run a debate with the default providers
 accord "Should we migrate to a microservices architecture?"
 
 # Use a specialist team
 accord --team security "Review the new authentication flow"
 accord --team architecture "Evaluate the trade-offs of using Bun vs Node.js"
+
+# Choose which LLMs participate and their roles
+accord --llms claude:coordinator,gemini:debater,codex:debater \
+  "Should we migrate to a microservices architecture?"
+
+# Combine a team preset with a custom LLM set
+accord --team security \
+  --llms claude:coordinator,gemini:debater,codex:debater \
+  "Review the new authentication flow"
 ```
 
 ---
