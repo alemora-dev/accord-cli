@@ -1,5 +1,4 @@
-import { spawn } from 'node:child_process';
-import { execFileSync } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { createWriteStream, rmSync, statSync } from 'node:fs';
 import { fail, log } from './common.ts';
 
