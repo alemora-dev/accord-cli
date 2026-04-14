@@ -56,6 +56,21 @@ accord --team security \
 
 ---
 
+## Claude Code Integration
+
+If you use [Claude Code](https://claude.ai/code), Accord ships a `/accord` slash command so you can run debates directly from Claude without leaving your editor.
+
+```bash
+/accord "Should we migrate to microservices?"
+/accord --llms codex:debater,gemini:debater "Best browser automation workflows"
+```
+
+Claude acts as the **Coordinator** (research + final synthesis) while the external LLM CLIs handle the debater stages. Results are written to `runs/` just like a normal run.
+
+The command is available automatically when you open this repo in Claude Code — no setup needed.
+
+---
+
 ## How It Works
 
 ```mermaid
