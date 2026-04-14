@@ -8,3 +8,4 @@ runs/
 docs/superpowers/
 .worktrees/
 dist/
+npm/accord.js

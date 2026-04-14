@@ -1,0 +1,20 @@
+{
+  "name": "@alemora/accord",
+  "version": "0.0.0",
+  "description": "Multi-agent debates that commit to your repo",
+  "license": "MIT",
+  "bin": {
+    "accord": "accord.js"
+  },
+  "files": [
+    "accord.js"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alemora-dev/accord-cli.git"
+  },
+  "homepage": "https://github.com/alemora-dev/accord-cli#readme"
+}
