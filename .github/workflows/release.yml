@@ -63,7 +63,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
         shell: bash
@@ -71,4 +70,4 @@ jobs:
           cp dist/accord.js npm/accord.js
           cd npm
           npm version "$VERSION" --no-git-tag-version
-          npm publish --access public --provenance
+          npm publish --access public --provenance --registry https://registry.npmjs.org
