@@ -89,10 +89,21 @@ function spawnToFile(
   args: string[],
   outputFile: string
 ): Promise<number> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    const writeStream = createWriteStream(outputFile);
     const proc = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'inherit'] });
-    proc.stdout!.pipe(createWriteStream(outputFile));
-    proc.on('close', resolve);
+    proc.stdout!.pipe(writeStream);
+
+    let exitCode: number | null = null;
+    let writeFinished = false;
+
+    const tryResolve = () => {
+      if (exitCode !== null && writeFinished) resolve(exitCode);
+    };
+
+    proc.on('close', (code) => { exitCode = code ?? 1; tryResolve(); });
+    writeStream.on('finish', () => { writeFinished = true; tryResolve(); });
+    writeStream.on('error', reject);
   });
 }
 
