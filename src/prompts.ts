@@ -1,18 +1,41 @@
 import { statSync } from 'node:fs';
 import { promptMode, readFileOr, type PromptMode } from './common.ts';
 
-async function loadTemplate(name: string, mode: PromptMode): Promise<string> {
+import sharedResearchMd from './prompts/shared-research.md' with { type: 'text' };
+import sharedResearchDetailedMd from './prompts/shared-research.detailed.md' with { type: 'text' };
+import providerUnderstandingMd from './prompts/provider-understanding.md' with { type: 'text' };
+import providerUnderstandingDetailedMd from './prompts/provider-understanding.detailed.md' with { type: 'text' };
+import providerOpinionMd from './prompts/provider-opinion.md' with { type: 'text' };
+import providerOpinionDetailedMd from './prompts/provider-opinion.detailed.md' with { type: 'text' };
+import providerDebateMd from './prompts/provider-debate.md' with { type: 'text' };
+import providerDebateDetailedMd from './prompts/provider-debate.detailed.md' with { type: 'text' };
+import finalSynthesisMd from './prompts/final-synthesis.md' with { type: 'text' };
+import finalSynthesisDetailedMd from './prompts/final-synthesis.detailed.md' with { type: 'text' };
+
+const TEMPLATES: Record<string, string> = {
+  'shared-research': sharedResearchMd,
+  'shared-research.detailed': sharedResearchDetailedMd,
+  'provider-understanding': providerUnderstandingMd,
+  'provider-understanding.detailed': providerUnderstandingDetailedMd,
+  'provider-opinion': providerOpinionMd,
+  'provider-opinion.detailed': providerOpinionDetailedMd,
+  'provider-debate': providerDebateMd,
+  'provider-debate.detailed': providerDebateDetailedMd,
+  'final-synthesis': finalSynthesisMd,
+  'final-synthesis.detailed': finalSynthesisDetailedMd,
+};
+
+function loadTemplate(name: string, mode: PromptMode): string {
   if (mode === 'detailed') {
-    try {
-      return await Bun.file(new URL(`./prompts/${name}.detailed.md`, import.meta.url)).text();
-    } catch {}
+    const detailed = TEMPLATES[`${name}.detailed`];
+    if (detailed) return detailed;
   }
-  return await Bun.file(new URL(`./prompts/${name}.md`, import.meta.url)).text();
+  return TEMPLATES[name]!;
 }
 
 export async function sharedResearchPrompt(topic: string, slug: string): Promise<string> {
   const mode = promptMode(topic);
-  const template = await loadTemplate('shared-research', mode);
+  const template = loadTemplate('shared-research', mode);
   return `${template}\n\nStage: shared_research\nTopic: ${topic}\nTopic slug: ${slug}\nPrompt mode: ${mode}`;
 }
 
@@ -23,7 +46,7 @@ export async function providerUnderstandingPrompt(
   researchFile: string
 ): Promise<string> {
   const mode = promptMode(topic);
-  const template = await loadTemplate('provider-understanding', mode);
+  const template = loadTemplate('provider-understanding', mode);
   const research = readFileOr(researchFile);
   return [
     template,
@@ -47,7 +70,7 @@ export async function providerOpinionPrompt(
   understandingFile: string
 ): Promise<string> {
   const mode = promptMode(topic);
-  const template = await loadTemplate('provider-opinion', mode);
+  const template = loadTemplate('provider-opinion', mode);
   const research = readFileOr(researchFile);
   const understanding = readFileOr(understandingFile);
   return [
@@ -76,7 +99,7 @@ export async function providerDebatePrompt(
   peerOpinionFiles: string[]
 ): Promise<string> {
   const mode = promptMode(topic);
-  const template = await loadTemplate('provider-debate', mode);
+  const template = loadTemplate('provider-debate', mode);
   const research = readFileOr(researchFile);
   const ownOpinion = readFileOr(ownOpinionFile);
 
@@ -115,7 +138,7 @@ export async function finalSynthesisPrompt(
   artifactFiles: string[]
 ): Promise<string> {
   const mode = promptMode(topic);
-  const template = await loadTemplate('final-synthesis', mode);
+  const template = loadTemplate('final-synthesis', mode);
   const research = readFileOr(researchFile);
 
   const artifactSection = artifactFiles
