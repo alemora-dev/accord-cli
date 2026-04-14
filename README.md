@@ -15,7 +15,7 @@ Accord runs a council of AI agents on any topic and writes the full debate — r
 | | Accord | Ephemeral assistants |
 |---|---|---|
 | **Output** | Permanent `.md` files in `runs/` | Disappears when you close the chat |
-| **Install** | Download binary from [Releases](https://github.com/alemora-dev/accord-cli/releases) | Python 3.10+ + uv + manual config |
+| **Install** | `npm install -g @alemora/accord` | Python 3.10+ + uv + manual config |
 | **Runtime** | Zero — single binary | Requires runtime |
 | **LLMs** | Any CLI (codex, claude, gemini, custom) | Platform-specific |
 | **Teams** | Built-in specialist presets | Generic assistant |
@@ -25,22 +25,13 @@ Accord runs a council of AI agents on any topic and writes the full debate — r
 
 ## Install
 
-**Option 1 — Download a pre-built binary** (macOS / Linux):
-
 ```bash
-# Replace <platform> with: darwin-arm64, darwin-x64, linux-x64, or linux-arm64
-curl -L https://github.com/alemora-dev/accord-cli/releases/latest/download/accord-<platform>-2.0.0.tar.gz | tar -xz
-sudo mv accord /usr/local/bin/accord
-```
+# One-off — no install needed
+npx @alemora/accord "Should we migrate to microservices?"
 
-**Option 2 — Build from source** (requires [Bun](https://bun.sh)):
-
-```bash
-git clone https://github.com/alemora-dev/accord-cli.git
-cd accord-cli
-bun install
-bun run scripts/build.ts          # writes binaries to dist/
-sudo cp dist/accord-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/') /usr/local/bin/accord
+# Permanent global install
+npm install -g @alemora/accord
+accord "Should we migrate to microservices?"
 ```
 
 ## Quick Start
